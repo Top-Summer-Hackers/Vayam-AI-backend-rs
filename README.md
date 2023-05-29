@@ -1,4 +1,4 @@
-# FACET WIKI BACKEND
+# VAYAM-ai BACKEND
 
 ## Setup and run
 
