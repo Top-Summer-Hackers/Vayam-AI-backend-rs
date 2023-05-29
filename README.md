@@ -18,7 +18,7 @@ Fetch all the providers:
 
 Submit a new provider:
 
-`curl -X POST http://localhost:8080/api/provider -d '{"user_name": "Create UI",	"description": "desc_test",	"password":"123"}' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/provider -d '{"user_name": "Binance",	"description": "DEX", "password":"123"}' -H "content-type: application/json"`
 
 Fetch all the tasks:
 
@@ -26,4 +26,4 @@ Fetch all the tasks:
 
 Submit a new task:
 
-`curl -X POST http://localhost:8080/api/task -d '{"title": "Create UI","start_time": "22/01/2023","deadline": "29/10/2023","description": "desc_test" }' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/task -d '{"title": "Create bank-end","start_time": "22/01/2023","deadline": "29/10/2023","description": "Back end on rust" }' -H "content-type: application/json"`
