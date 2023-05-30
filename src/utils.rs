@@ -19,16 +19,16 @@ pub fn build_user_document(
   Ok(doc_with_description)
 }
 
-pub fn doc_to_user_response(provider: &UserModel) -> Result<UserResponse> {
-  let provider_response = UserResponse {
-    role: provider.role.to_owned(),
-    id: provider.id.to_hex(),
-    user_name: provider.user_name.to_owned(),
-    description: provider.description.to_owned().unwrap(),
-    password: provider.password.to_owned(),
+pub fn doc_to_user_response(user: &UserModel) -> Result<UserResponse> {
+  let user_response = UserResponse {
+    role: user.role.to_owned(),
+    id: user.id.to_hex(),
+    user_name: user.user_name.to_owned(),
+    description: user.description.to_owned().unwrap(),
+    password: user.password.to_owned(),
   };
 
-  Ok(provider_response)
+  Ok(user_response)
 }
 
 pub fn build_task_document(body: &CreateTaskSchema) -> Result<bson::Document> {

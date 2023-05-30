@@ -4,8 +4,8 @@ use axum::{routing::post, Router};
 
 use crate::{
   handler::{
-    add_freelancer_handler, add_provider_handler, create_task_handler, list_freelancers_handler,
-    list_providers_handler, list_tasks_handler,
+    add_client_handler, add_freelancer_handler, create_task_handler, list_clients_handler,
+    list_freelancers_handler, list_tasks_handler,
   },
   AppState,
 };
@@ -13,8 +13,8 @@ use crate::{
 pub fn create_router(app_state: Arc<AppState>) -> Router {
   Router::new()
     .route(
-      "/api/provider",
-      post(add_provider_handler).get(list_providers_handler),
+      "/api/client", //provider, employee
+      post(add_client_handler).get(list_clients_handler),
     )
     .route(
       "/api/task",

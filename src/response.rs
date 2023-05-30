@@ -39,7 +39,7 @@ pub struct SingleUserResponse {
 pub struct UsersListResponse {
   pub status: &'static str,
   pub results: usize,
-  pub providers: Vec<UserResponse>,
+  pub users: Vec<UserResponse>,
 }
 
 #[derive(Serialize, Debug)]
@@ -52,5 +52,5 @@ pub struct SingleTaskResponse {
 pub struct TaskListResponse {
   pub status: &'static str,
   pub results: usize,
-  pub providers: Vec<TaskResponse>,
+  pub tasks: Vec<TaskResponse>,
 }

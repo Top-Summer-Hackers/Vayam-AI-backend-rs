@@ -16,8 +16,8 @@ use mongodb::options::IndexOptions;
 use mongodb::{options::ClientOptions, Client, Collection, IndexModel};
 #[derive(Clone, Debug)]
 pub struct DB {
-  pub provider_collection_model: Collection<UserModel>,
-  pub provider_collection: Collection<Document>,
+  pub client_collection_model: Collection<UserModel>,
+  pub client_collection: Collection<Document>,
   pub tasks_collection_model: Collection<TaskModel>,
   pub tasks_collection: Collection<Document>,
   pub freelancer_collection_model: Collection<UserModel>,
@@ -31,8 +31,8 @@ impl DB {
     let mongodb_uri = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
     let database_name =
       std::env::var("MONGO_INIT_DATABASE").expect("MONGO_INIT_DATABASE must be set.");
-    let providers_collection_name = std::env::var("MONGODB_PROVIDERS_COLLECTION")
-      .expect("MONGODB_PROVIDERS_COLLECTION must be set.");
+    let clients_collection_name =
+      std::env::var("MONGODB_CLIENTS_COLLECTION").expect("MONGODB_CLIENTS_COLLECTION must be set.");
     let tasks_collection_name =
       std::env::var("MONGODB_TASKS_COLLECTION").expect("MONGODB_TASKS_COLLECTION must be set.");
     let freelancers_collection_name = std::env::var("MONGODB_FREELANCERS_COLLECTION")
@@ -41,11 +41,11 @@ impl DB {
     let mut client_options = ClientOptions::parse(mongodb_uri).await?;
     client_options.app_name = Some(database_name.to_string());
 
-    let client = Client::with_options(client_options)?;
-    let database = client.database(database_name.as_str());
+    let client_side = Client::with_options(client_options)?;
+    let database = client_side.database(database_name.as_str());
 
-    let provider_collection_model = database.collection(providers_collection_name.as_str());
-    let provider_collection = database.collection::<Document>(providers_collection_name.as_str());
+    let client_collection_model = database.collection(clients_collection_name.as_str());
+    let client_collection = database.collection::<Document>(clients_collection_name.as_str());
     let tasks_collection_model = database.collection(tasks_collection_name.as_str());
     let tasks_collection = database.collection::<Document>(tasks_collection_name.as_str());
     let freelancer_collection_model = database.collection(freelancers_collection_name.as_str());
@@ -55,8 +55,8 @@ impl DB {
     println!("✅ Database connected successfully");
 
     Ok(Self {
-      provider_collection_model,
-      provider_collection,
+      client_collection_model,
+      client_collection,
       tasks_collection_model,
       tasks_collection,
       freelancer_collection_model,
@@ -64,9 +64,9 @@ impl DB {
     })
   }
 
-  pub async fn fetch_providers(&self) -> Result<UsersListResponse> {
+  pub async fn fetch_clients(&self) -> Result<UsersListResponse> {
     let mut cursor = self
-      .provider_collection_model
+      .client_collection_model
       .find(None, None)
       .await
       .map_err(MongoQueryError)?;
@@ -79,13 +79,13 @@ impl DB {
     Ok(UsersListResponse {
       status: "Success",
       results: json_result.len(),
-      providers: json_result,
+      users: json_result,
     })
   }
 
-  pub async fn add_provider(&self, body: &CreateUserSchema) -> Result<SingleUserResponse> {
+  pub async fn add_client(&self, body: &CreateUserSchema) -> Result<SingleUserResponse> {
     let description = body.description.to_owned().unwrap_or_default();
-    let role = "provider";
+    let role = "client";
     let document = build_user_document(body, description, role.to_owned())?;
 
     let options = IndexOptions::builder().unique(true).build();
@@ -94,16 +94,12 @@ impl DB {
       .options(options)
       .build();
 
-    match self
-      .provider_collection_model
-      .create_index(index, None)
-      .await
-    {
+    match self.client_collection_model.create_index(index, None).await {
       Ok(_) => {}
       Err(e) => return Err(MongoQueryError(e)),
     };
 
-    let insert_result = match self.provider_collection.insert_one(&document, None).await {
+    let insert_result = match self.client_collection.insert_one(&document, None).await {
       Ok(result) => result,
       Err(e) => {
         if e
@@ -121,8 +117,8 @@ impl DB {
       .as_object_id()
       .expect("issue with new _id");
 
-    let provider_model = match self
-      .provider_collection_model
+    let client_model = match self
+      .client_collection_model
       .find_one(doc! {"_id": new_id}, None)
       .await
     {
@@ -131,11 +127,11 @@ impl DB {
       Err(e) => return Err(MongoQueryError(e)),
     };
 
-    let provider = doc_to_user_response(&provider_model)?;
+    let client = doc_to_user_response(&client_model)?;
 
     Ok(SingleUserResponse {
       status: "Success",
-      data: UserData { user: provider },
+      data: UserData { user: client },
     })
   }
 
@@ -154,7 +150,7 @@ impl DB {
     Ok(TaskListResponse {
       status: "Success",
       results: json_result.len(),
-      providers: json_result,
+      tasks: json_result,
     })
   }
 
@@ -223,7 +219,7 @@ impl DB {
     Ok(UsersListResponse {
       status: "Success",
       results: json_result.len(),
-      providers: json_result,
+      users: json_result,
     })
   }
 

@@ -8,25 +8,20 @@ use crate::{
   AppState,
 };
 
-pub async fn list_providers_handler(
+pub async fn list_clients_handler(
   State(app_state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-  match app_state.db.fetch_providers().await.map_err(MyError::from) {
+  match app_state.db.fetch_clients().await.map_err(MyError::from) {
     Ok(res) => Ok(Json(res)),
     Err(e) => Err(e.into()),
   }
 }
 
-pub async fn add_provider_handler(
+pub async fn add_client_handler(
   State(app_state): State<Arc<AppState>>,
   Json(body): Json<CreateUserSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-  match app_state
-    .db
-    .add_provider(&body)
-    .await
-    .map_err(MyError::from)
-  {
+  match app_state.db.add_client(&body).await.map_err(MyError::from) {
     Ok(res) => Ok((StatusCode::CREATED, Json(res))),
     Err(e) => Err(e.into()),
   }

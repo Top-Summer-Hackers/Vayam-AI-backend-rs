@@ -12,13 +12,13 @@ With rustup `curl https://sh.rustup.rs -sSf | sh -s`
 
 ## Test the API endpoints
 
-Fetch all the providers(clients):
+Fetch all the client(provider or employee):
 
-`curl http://localhost:8080/api/provider`
+`curl http://localhost:8080/api/client`
 
-Submit a new provider(clients):
+Submit a new client(provider or employee):
 
-`curl -X POST http://localhost:8080/api/provider -d '{"user_name": "Scroll",	"description": "zk",	"password":"123"}' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/client -d '{"user_name": "Scroll",	"description": "zk",	"password":"123"}' -H "content-type: application/json"`
 
 Fetch all the tasks:
 
@@ -34,4 +34,4 @@ Fetch all the freelancers:
 
 Submit a new freelancer:
 
-`curl -X POST http://localhost:8080/api/provider -d '{"user_name": "Medhi",	"description": "Auditor",	"password":"123"}' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/freelancer -d '{"user_name": "Medhi",	"description": "Auditor",	"password":"123"}' -H "content-type: application/json"`
