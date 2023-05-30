@@ -4,7 +4,7 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 
 use crate::{
   error::MyError,
-  schema::{CreateProviderSchema, CreateTaskSchema},
+  schema::{CreateTaskSchema, CreateUserSchema},
   AppState,
 };
 
@@ -19,7 +19,7 @@ pub async fn list_providers_handler(
 
 pub async fn add_provider_handler(
   State(app_state): State<Arc<AppState>>,
-  Json(body): Json<CreateProviderSchema>,
+  Json(body): Json<CreateUserSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
   match app_state
     .db
@@ -46,6 +46,35 @@ pub async fn create_task_handler(
   Json(body): Json<CreateTaskSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
   match app_state.db.create_task(&body).await.map_err(MyError::from) {
+    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
+    Err(e) => Err(e.into()),
+  }
+}
+
+pub async fn list_freelancers_handler(
+  State(app_state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state
+    .db
+    .fetch_freelancers()
+    .await
+    .map_err(MyError::from)
+  {
+    Ok(res) => Ok(Json(res)),
+    Err(e) => Err(e.into()),
+  }
+}
+
+pub async fn add_freelancer_handler(
+  State(app_state): State<Arc<AppState>>,
+  Json(body): Json<CreateUserSchema>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state
+    .db
+    .add_freelancer(&body)
+    .await
+    .map_err(MyError::from)
+  {
     Ok(res) => Ok((StatusCode::CREATED, Json(res))),
     Err(e) => Err(e.into()),
   }

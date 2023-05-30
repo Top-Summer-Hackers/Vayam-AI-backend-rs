@@ -2,8 +2,9 @@ use serde::Serialize;
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Debug)]
-pub struct ProviderResponse {
+pub struct UserResponse {
   pub id: String,
+  pub role: String,
   pub user_name: String,
   pub description: String,
   pub password: String,
@@ -19,8 +20,8 @@ pub struct TaskResponse {
   pub description: String,
 }
 #[derive(Serialize, Debug)]
-pub struct ProviderData {
-  pub provider: ProviderResponse,
+pub struct UserData {
+  pub user: UserResponse,
 }
 
 #[derive(Serialize, Debug)]
@@ -29,16 +30,16 @@ pub struct TaskData {
 }
 
 #[derive(Serialize, Debug)]
-pub struct SingleProviderResponse {
+pub struct SingleUserResponse {
   pub status: &'static str,
-  pub data: ProviderData,
+  pub data: UserData,
 }
 
 #[derive(Serialize, Debug)]
-pub struct ProvidersListResponse {
+pub struct UsersListResponse {
   pub status: &'static str,
   pub results: usize,
-  pub providers: Vec<ProviderResponse>,
+  pub providers: Vec<UserResponse>,
 }
 
 #[derive(Serialize, Debug)]

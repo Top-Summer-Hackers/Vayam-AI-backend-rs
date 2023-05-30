@@ -3,23 +3,25 @@ use crate::error::MyError::MongoSerializeBsonError;
 use crate::model::TaskModel;
 use crate::response::TaskResponse;
 use crate::schema::CreateTaskSchema;
-use crate::{model::ProviderModel, response::ProviderResponse, schema::CreateProviderSchema};
+use crate::{model::UserModel, response::UserResponse, schema::CreateUserSchema};
 use mongodb::bson::{self, doc};
 
-pub fn build_provider_document(
-  body: &CreateProviderSchema,
+pub fn build_user_document(
+  body: &CreateUserSchema,
   description: String,
+  role: String,
 ) -> Result<bson::Document> {
   let serialized_data = bson::to_bson(body).map_err(MongoSerializeBsonError)?;
   let document = serialized_data.as_document().unwrap();
-  let mut doc_with_description = doc! {"description": description};
+  let mut doc_with_description = doc! {"role": role, "description": description};
   doc_with_description.extend(document.clone());
 
   Ok(doc_with_description)
 }
 
-pub fn doc_to_provider_response(provider: &ProviderModel) -> Result<ProviderResponse> {
-  let provider_response = ProviderResponse {
+pub fn doc_to_user_response(provider: &UserModel) -> Result<UserResponse> {
+  let provider_response = UserResponse {
+    role: provider.role.to_owned(),
     id: provider.id.to_hex(),
     user_name: provider.user_name.to_owned(),
     description: provider.description.to_owned().unwrap(),

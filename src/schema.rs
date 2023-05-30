@@ -6,7 +6,7 @@ pub struct ParamOptions {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CreateProviderSchema {
+pub struct CreateUserSchema {
   pub user_name: String,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
