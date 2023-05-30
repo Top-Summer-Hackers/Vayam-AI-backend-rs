@@ -1,7 +1,3 @@
-use std::sync::Arc;
-
-use axum::{routing::post, Router};
-
 use crate::{
   handler::{
     add_client_handler, add_freelancer_handler, create_task_handler, list_clients_handler,
@@ -9,6 +5,8 @@ use crate::{
   },
   AppState,
 };
+use axum::{routing::post, Router};
+use std::sync::Arc;
 
 pub fn create_router(app_state: Arc<AppState>) -> Router {
   Router::new()
