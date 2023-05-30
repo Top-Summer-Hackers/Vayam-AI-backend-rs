@@ -1,4 +1,4 @@
-# FACET WIKI BACKEND
+# VAYAM-ai BACKEND
 
 ## Setup and run
 
@@ -26,7 +26,15 @@ Fetch all the tasks:
 
 Submit a new task:
 
-`curl -X POST http://localhost:8080/api/task -d '{"title": "Create UI","start_time": "22/01/2023","deadline": "29/10/2023","description": "desc_test" }' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/task -d '{"title": "Create bank-end","start_time": "22/01/2023","deadline": "29/10/2023","description": "Back end on rust" }' -H "content-type: application/json"`
+
+Fetch all the freelancers:
+
+`curl http://localhost:8080/api/freelancer`
+
+Submit a new freelancer:
+
+`curl -X POST http://localhost:8080/api/provider -d '{"user_name": "Medhi",	"description": "Auditor",	"password":"123"}' -H "content-type: application/json"`
 
 Fetch all the freelancers:
 
