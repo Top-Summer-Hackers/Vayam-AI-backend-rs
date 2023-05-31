@@ -55,6 +55,10 @@ pub struct TaskData {
 pub struct ProposalData {
   pub task: ProposalResponse,
 }
+#[derive(Serialize, Debug)]
+pub struct MilestoneData {
+  pub milestone: MilestoneResponse,
+}
 
 #[derive(Serialize, Debug)]
 pub struct SingleUserResponse {
@@ -80,6 +84,11 @@ pub struct SingleProposalResponse {
   pub status: &'static str,
   pub data: ProposalData,
 }
+#[derive(Serialize, Debug)]
+pub struct SingleMilestoneResponse {
+  pub status: &'static str,
+  pub data: MilestoneData,
+}
 
 #[derive(Serialize, Debug)]
 pub struct TaskListResponse {
@@ -92,5 +101,11 @@ pub struct TaskListResponse {
 pub struct ProposalListResponse {
   pub status: &'static str,
   pub results: usize,
-  pub tasks: Vec<ProposalResponse>,
+  pub proposals: Vec<ProposalResponse>,
+}
+#[derive(Serialize, Debug)]
+pub struct MilestoneListResponse {
+  pub status: &'static str,
+  pub results: usize,
+  pub milestones: Vec<MilestoneResponse>,
 }

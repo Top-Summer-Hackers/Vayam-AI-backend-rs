@@ -56,13 +56,14 @@ pub fn build_proposal_document(body: &CreateProposalSchema) -> Result<bson::Docu
   Ok(doc_with_accepted)
 }
 
-// pub fn build_milestones_document(body: &Vec<CreateMilestoneSchema>) -> Result<bson::Document> {
-//   let serialized_data = bson::to_bson(body).map_err(MongoSerializeBsonError)?;
-//   let document = serialized_data.as_document().unwrap();
-//   let mut doc_with_status = doc! {"status": "Initialized"};
-//   doc_with_status.extend(document.clone());
-//   Ok(document.clone())
-// }
+pub fn build_milestones_document(body: &CreateMilestoneSchema) -> Result<bson::Document> {
+  let serialized_data = bson::to_bson(body).map_err(MongoSerializeBsonError)?;
+  let document = serialized_data.as_document().unwrap();
+  let status = "Initialized";
+  let mut doc_with_status = doc! {"status": status};
+  doc_with_status.extend(document.clone());
+  Ok(doc_with_status)
+}
 
 pub fn doc_to_task_response(task: &TaskModel) -> Result<TaskResponse> {
   let task_response = TaskResponse {
@@ -90,17 +91,13 @@ pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResp
   Ok(proposal_response)
 }
 
-// pub fn doc_to_milestones_response(milestones: Vec<MilestoneModel>) -> Vec<MilestoneResponse> {
-//   milestones
-//     .iter()
-//     .map(|milestone| {
-//       let milestone_response = MilestoneResponse {
-//         description: milestone.description.to_owned(),
-//         deadline: milestone.deadline.to_owned(),
-//         price: milestone.price,
-//         status: milestone.status.to_owned(),
-//       };
-//       milestone_response
-//     })
-//     .collect()
-// }
+pub fn doc_to_milestone_response(milestone: &MilestoneModel) -> Result<MilestoneResponse> {
+  let milestone_response = MilestoneResponse {
+    id: milestone.id.to_hex(),
+    description: milestone.description.to_owned(),
+    deadline: milestone.deadline.to_owned(),
+    price: milestone.price,
+    status: milestone.status.to_owned(),
+  };
+  Ok(milestone_response)
+}

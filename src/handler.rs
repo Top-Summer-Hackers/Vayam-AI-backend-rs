@@ -4,7 +4,7 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 
 use crate::{
   error::MyError,
-  schema::{CreateProposalSchema, CreateTaskSchema, CreateUserSchema},
+  schema::{CreateMilestoneSchema, CreateProposalSchema, CreateTaskSchema, CreateUserSchema},
   AppState,
 };
 
@@ -91,6 +91,30 @@ pub async fn submit_proposal_handler(
   match app_state
     .db
     .submit_proposal(&body)
+    .await
+    .map_err(MyError::from)
+  {
+    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
+    Err(e) => Err(e.into()),
+  }
+}
+
+pub async fn list_milestone_handler(
+  State(app_state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state.db.fetch_milestones().await.map_err(MyError::from) {
+    Ok(res) => Ok(Json(res)),
+    Err(e) => Err(e.into()),
+  }
+}
+
+pub async fn add_milestone_handler(
+  State(app_state): State<Arc<AppState>>,
+  Json(body): Json<CreateMilestoneSchema>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state
+    .db
+    .add_milestone(&body)
     .await
     .map_err(MyError::from)
   {
