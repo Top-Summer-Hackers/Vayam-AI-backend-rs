@@ -41,21 +41,21 @@ impl Into<(axum::http::StatusCode, Json<serde_json::Value>)> for MyError {
         StatusCode::CONFLICT,
         ErrorResponse {
           status: "Fail",
-          message: "Facet with that address and chain_id already exists".to_string(),
+          message: "User with that id already exists".to_string(),
         },
       ),
-      MyError::InvalidIDError(address) => (
+      MyError::InvalidIDError(id) => (
         StatusCode::BAD_REQUEST,
         ErrorResponse {
           status: "Fail",
-          message: format!("invalid address: {}", address),
+          message: format!("invalid id: {}", id),
         },
       ),
-      MyError::NotFoundError(address) => (
+      MyError::NotFoundError(id) => (
         StatusCode::NOT_FOUND,
         ErrorResponse {
           status: "Fail",
-          message: format!("Facet with address: {} not found", address),
+          message: format!("Facet with id: {} not found", id),
         },
       ),
       MyError::MongoError(e) => (
