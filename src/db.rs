@@ -1,12 +1,14 @@
 use crate::error::MyError;
-use crate::model::TaskModel;
+use crate::model::{ProposalModel, TaskModel};
 use crate::response::{
-  SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData,
-  UserResponse, UsersListResponse,
+  ProposalData, ProposalListResponse, ProposalResponse, SingleProposalResponse, SingleTaskResponse,
+  SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData, UserResponse,
+  UsersListResponse,
 };
-use crate::schema::CreateTaskSchema;
+use crate::schema::{CreateProposalSchema, CreateTaskSchema};
 use crate::utils::{
-  build_task_document, build_user_document, doc_to_task_response, doc_to_user_response,
+  build_proposal_document, build_task_document, build_user_document, doc_to_proposal_response,
+  doc_to_task_response, doc_to_user_response,
 };
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
@@ -22,6 +24,8 @@ pub struct DB {
   pub tasks_collection: Collection<Document>,
   pub freelancer_collection_model: Collection<UserModel>,
   pub freelancer_collection: Collection<Document>,
+  pub proposals_collection_model: Collection<ProposalModel>,
+  pub proposals_collection: Collection<Document>,
 }
 
 pub type Result<T> = std::result::Result<T, MyError>;
@@ -37,6 +41,8 @@ impl DB {
       std::env::var("MONGODB_TASKS_COLLECTION").expect("MONGODB_TASKS_COLLECTION must be set.");
     let freelancers_collection_name = std::env::var("MONGODB_FREELANCERS_COLLECTION")
       .expect("MONGODB_FREELANCERS_COLLECTION must be set.");
+    let proposals_collection_name = std::env::var("MONGODB_PROPOSALS_COLLECTION")
+      .expect("MONGODB_PROPOSALS_COLLECTION must be set.");
 
     let mut client_options = ClientOptions::parse(mongodb_uri).await?;
     client_options.app_name = Some(database_name.to_string());
@@ -51,6 +57,8 @@ impl DB {
     let freelancer_collection_model = database.collection(freelancers_collection_name.as_str());
     let freelancer_collection =
       database.collection::<Document>(freelancers_collection_name.as_str());
+    let proposals_collection_model = database.collection(proposals_collection_name.as_str());
+    let proposals_collection = database.collection::<Document>(proposals_collection_name.as_str());
 
     println!("✅ Database connected successfully");
 
@@ -61,6 +69,8 @@ impl DB {
       tasks_collection,
       freelancer_collection_model,
       freelancer_collection,
+      proposals_collection_model,
+      proposals_collection,
     })
   }
 
@@ -276,6 +286,67 @@ impl DB {
     Ok(SingleUserResponse {
       status: "Success",
       data: UserData { user },
+    })
+  }
+
+  pub async fn fetch_proposals(&self) -> Result<ProposalListResponse> {
+    let mut cursor = self
+      .proposals_collection_model
+      .find(None, None)
+      .await
+      .map_err(MongoQueryError)?;
+
+    let mut json_result: Vec<ProposalResponse> = Vec::new();
+    while let Some(doc) = cursor.next().await {
+      json_result.push(doc_to_proposal_response(&doc.unwrap())?);
+    }
+
+    Ok(ProposalListResponse {
+      status: "Success",
+      results: json_result.len(),
+      tasks: json_result,
+    })
+  }
+
+  pub async fn submit_proposal(
+    &self,
+    body: &CreateProposalSchema,
+  ) -> Result<SingleProposalResponse> {
+    let document = build_proposal_document(body)?;
+
+    let insert_result = match self.proposals_collection.insert_one(&document, None).await {
+      Ok(result) => result,
+      Err(e) => {
+        if e
+          .to_string()
+          .contains("E11000 duplicate key error collection")
+        {
+          return Err(MongoDuplicateError(e));
+        }
+        return Err(MongoQueryError(e));
+      }
+    };
+
+    let new_id = insert_result
+      .inserted_id
+      .as_object_id()
+      .expect("issue with new _id");
+
+    let proposal_model = match self
+      .proposals_collection_model
+      .find_one(doc! {"_id": new_id}, None)
+      .await
+    {
+      Ok(Some(doc)) => doc,
+      Ok(None) => return Err(NotFoundError(new_id.to_string())),
+      Err(e) => return Err(MongoQueryError(e)),
+    };
+
+    let proposal = doc_to_proposal_response(&proposal_model)?;
+
+    Ok(SingleProposalResponse {
+      status: "Success",
+      data: ProposalData { task: proposal },
     })
   }
 }

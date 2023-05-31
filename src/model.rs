@@ -32,13 +32,15 @@ pub struct ProposalModel {
   pub id: ObjectId,
   pub task_id: ObjectId,
   pub freelancer_id: ObjectId,
-  pub milestones: Vec<Milestone>,
+  pub milestones: Option<Vec<ObjectId>>,
   pub price: u16,
   pub accepted: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Milestone {
+pub struct MilestoneModel {
+  #[serde(rename = "_id")]
+  pub id: ObjectId,
   pub description: String,
   pub deadline: String,
   pub price: u16,

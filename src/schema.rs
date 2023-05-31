@@ -11,8 +11,8 @@ pub struct CreateUserSchema {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
   pub password: String,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub tasks: Option<Vec<String>>,
+  // #[serde(skip_serializing_if = "Option::is_none")]
+  // pub tasks: Option<Vec<String>>,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateTaskSchema {
@@ -30,8 +30,9 @@ pub struct CreateTaskSchema {
 pub struct CreateProposalSchema {
   pub task_id: String,
   pub freelancer_id: String,
-  pub milestones: Vec<CreateMilestoneSchema>,
-  pub price: u16,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub milestones: Option<Vec<String>>,
+  //pub price: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

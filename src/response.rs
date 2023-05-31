@@ -27,14 +27,14 @@ pub struct ProposalResponse {
   pub id: String,
   pub task_id: String,
   pub freelancer_id: String,
-  pub milestones: Vec<MilestoneResponse>,
+  pub milestones: Vec<String>,
   pub price: u16,
-  pub status: String,
   pub accepted: bool,
 }
 
 #[derive(Serialize, Debug)]
 pub struct MilestoneResponse {
+  pub id: String,
   pub description: String,
   pub deadline: String,
   pub price: u16,
@@ -49,6 +49,11 @@ pub struct UserData {
 #[derive(Serialize, Debug)]
 pub struct TaskData {
   pub task: TaskResponse,
+}
+
+#[derive(Serialize, Debug)]
+pub struct ProposalData {
+  pub task: ProposalResponse,
 }
 
 #[derive(Serialize, Debug)]
@@ -71,8 +76,21 @@ pub struct SingleTaskResponse {
 }
 
 #[derive(Serialize, Debug)]
+pub struct SingleProposalResponse {
+  pub status: &'static str,
+  pub data: ProposalData,
+}
+
+#[derive(Serialize, Debug)]
 pub struct TaskListResponse {
   pub status: &'static str,
   pub results: usize,
   pub tasks: Vec<TaskResponse>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct ProposalListResponse {
+  pub status: &'static str,
+  pub results: usize,
+  pub tasks: Vec<ProposalResponse>,
 }
