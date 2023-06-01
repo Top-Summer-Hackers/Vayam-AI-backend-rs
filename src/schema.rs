@@ -7,12 +7,14 @@ pub struct ParamOptions {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateUserSchema {
+  #[serde(rename = "_id")]
+  pub _id: String, //Todo: serde no converte "id" into "_id"
   pub user_name: String,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
   pub password: String,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub tasks: Option<Vec<String>>,
+  // #[serde(skip_serializing_if = "Option::is_none")]
+  // pub tasks: Option<Vec<String>>,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateTaskSchema {
@@ -31,12 +33,19 @@ pub struct CreateProposalSchema {
   pub task_id: String,
   pub freelancer_id: String,
   pub milestones: Vec<CreateMilestoneSchema>,
-  pub price: u16,
+  //pub price: u16,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreateBasicProposalSchema {
+  pub task_id: String,
+  pub freelancer_id: String,
+  //pub price: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateMilestoneSchema {
   pub description: String,
   pub deadline: String,
-  pub price: u16,
+  pub price: usize,
 }

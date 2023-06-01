@@ -1,12 +1,14 @@
 use crate::error::MyError;
-use crate::model::TaskModel;
+use crate::model::{ProposalModel, TaskModel};
 use crate::response::{
+    ProposalData, ProposalListResponse, ProposalResponse, SingleProposalResponse,
     SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData,
     UserResponse, UsersListResponse,
 };
-use crate::schema::CreateTaskSchema;
+use crate::schema::{CreateProposalSchema, CreateTaskSchema};
 use crate::utils::{
-    build_task_document, build_user_document, doc_to_task_response, doc_to_user_response,
+    build_proposal_document, build_task_document, build_user_document, doc_to_proposal_response,
+    doc_to_task_response, doc_to_user_response,
 };
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
@@ -22,6 +24,8 @@ pub struct DB {
     pub tasks_collection: Collection<Document>,
     pub freelancer_collection_model: Collection<UserModel>,
     pub freelancer_collection: Collection<Document>,
+    pub proposals_collection_model: Collection<ProposalModel>,
+    pub proposals_collection: Collection<Document>,
 }
 
 pub type Result<T> = std::result::Result<T, MyError>;
@@ -37,6 +41,8 @@ impl DB {
             .expect("MONGODB_TASKS_COLLECTION must be set.");
         let freelancers_collection_name = std::env::var("MONGODB_FREELANCERS_COLLECTION")
             .expect("MONGODB_FREELANCERS_COLLECTION must be set.");
+        let proposals_collection_name = std::env::var("MONGODB_PROPOSALS_COLLECTION")
+            .expect("MONGODB_PROPOSALS_COLLECTION must be set.");
 
         let mut client_options = ClientOptions::parse(mongodb_uri).await?;
         client_options.app_name = Some(database_name.to_string());
@@ -51,6 +57,9 @@ impl DB {
         let freelancer_collection_model = database.collection(freelancers_collection_name.as_str());
         let freelancer_collection =
             database.collection::<Document>(freelancers_collection_name.as_str());
+        let proposals_collection_model = database.collection(proposals_collection_name.as_str());
+        let proposals_collection =
+            database.collection::<Document>(proposals_collection_name.as_str());
 
         println!("✅ Database connected successfully");
 
@@ -61,6 +70,8 @@ impl DB {
             tasks_collection,
             freelancer_collection_model,
             freelancer_collection,
+            proposals_collection_model,
+            proposals_collection,
         })
     }
 
@@ -113,7 +124,7 @@ impl DB {
 
         let new_id = insert_result
             .inserted_id
-            .as_object_id()
+            .as_str()
             .expect("issue with new _id");
 
         let client_model = match self
@@ -174,7 +185,13 @@ impl DB {
     }
 
     pub async fn create_task(&self, body: &CreateTaskSchema) -> Result<SingleTaskResponse> {
-        let document = build_task_document(body)?;
+        let _id = self
+            .tasks_collection
+            .count_documents(None, None)
+            .await
+            .map_err(MongoQueryError)?
+            + 1;
+        let document = build_task_document(body, _id.to_string())?;
 
         let options = IndexOptions::builder().unique(true).build();
         let index = IndexModel::builder()
@@ -201,7 +218,7 @@ impl DB {
 
         let new_id = insert_result
             .inserted_id
-            .as_object_id()
+            .as_str()
             .expect("issue with new _id");
 
         let task_model = match self
@@ -275,7 +292,7 @@ impl DB {
 
         let new_id = insert_result
             .inserted_id
-            .as_object_id()
+            .as_str()
             .expect("issue with new _id");
 
         let user_model = match self
@@ -295,4 +312,130 @@ impl DB {
             data: UserData { user },
         })
     }
+
+    pub async fn fetch_proposals(&self) -> Result<ProposalListResponse> {
+        let mut cursor = self
+            .proposals_collection_model
+            .find(None, None)
+            .await
+            .map_err(MongoQueryError)?;
+
+        let mut json_result: Vec<ProposalResponse> = Vec::new();
+        while let Some(doc) = cursor.next().await {
+            json_result.push(doc_to_proposal_response(&doc.unwrap())?);
+        }
+
+        Ok(ProposalListResponse {
+            status: "Success",
+            results: json_result.len(),
+            proposals: json_result,
+        })
+    }
+
+    pub async fn submit_proposal(
+        &self,
+        body: &CreateProposalSchema,
+    ) -> Result<SingleProposalResponse> {
+        let _id = self
+            .proposals_collection
+            .count_documents(None, None)
+            .await
+            .map_err(MongoQueryError)?
+            + 1;
+        let document = build_proposal_document(body, _id.to_string())?;
+
+        let insert_result = match self.proposals_collection.insert_one(&document, None).await {
+            Ok(result) => result,
+            Err(e) => {
+                if e.to_string()
+                    .contains("E11000 duplicate key error collection")
+                {
+                    return Err(MongoDuplicateError(e));
+                }
+                return Err(MongoQueryError(e));
+            }
+        };
+
+        let new_id = insert_result
+            .inserted_id
+            .as_str()
+            .expect("issue with new _id");
+        let proposal_model = match self
+            .proposals_collection_model
+            .find_one(doc! {"_id": new_id}, None)
+            .await
+        {
+            Ok(Some(doc)) => doc,
+            Ok(None) => return Err(NotFoundError(new_id.to_string())),
+            Err(e) => return Err(MongoQueryError(e)),
+        };
+
+        let proposal = doc_to_proposal_response(&proposal_model)?;
+
+        Ok(SingleProposalResponse {
+            status: "Success",
+            data: ProposalData { task: proposal },
+        })
+    }
+
+    // pub async fn fetch_milestones(&self) -> Result<MilestoneListResponse> {
+    //   let mut cursor = self
+    //     .milestones_collection_model
+    //     .find(None, None)
+    //     .await
+    //     .map_err(MongoQueryError)?;
+
+    //   let mut json_result: Vec<MilestoneResponse> = Vec::new();
+    //   while let Some(doc) = cursor.next().await {
+    //     json_result.push(doc_to_milestone_response(&doc.unwrap())?);
+    //   }
+
+    //   Ok(MilestoneListResponse {
+    //     status: "Success",
+    //     results: json_result.len(),
+    //     milestones: json_result,
+    //   })
+    // }
+
+    // pub async fn add_milestone(
+    //   &self,
+    //   body: &CreateMilestoneSchema,
+    // ) -> Result<SingleMilestoneResponse> {
+    //   let document = build_milestones_document(body)?;
+
+    //   let insert_result = match self.milestones_collection.insert_one(&document, None).await {
+    //     Ok(result) => result,
+    //     Err(e) => {
+    //       if e
+    //         .to_string()
+    //         .contains("E11000 duplicate key error collection")
+    //       {
+    //         return Err(MongoDuplicateError(e));
+    //       }
+    //       return Err(MongoQueryError(e));
+    //     }
+    //   };
+
+    //   let new_id = insert_result
+    //     .inserted_id
+    //     .as_object_id()
+    //     .expect("issue with new _id");
+
+    //   let milestone_model = match self
+    //     .milestones_collection_model
+    //     .find_one(doc! {"_id": new_id}, None)
+    //     .await
+    //   {
+    //     Ok(Some(doc)) => doc,
+    //     Ok(None) => return Err(NotFoundError(new_id.to_string())),
+    //     Err(e) => return Err(MongoQueryError(e)),
+    //   };
+
+    //   let milestone = doc_to_milestone_response(&milestone_model)?;
+
+    //   Ok(SingleMilestoneResponse {
+    //     status: "Success",
+    //     data: MilestoneData { milestone },
+    //   })
+    // }
 }
