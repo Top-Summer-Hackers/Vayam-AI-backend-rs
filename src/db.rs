@@ -1,5 +1,5 @@
 use crate::error::MyError;
-use crate::model::{MilestoneModel, ProposalModel, TaskModel};
+use crate::model::{ProposalModel, TaskModel};
 use crate::response::{
   ProposalData, ProposalListResponse, ProposalResponse, SingleProposalResponse, SingleTaskResponse,
   SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData, UserResponse,

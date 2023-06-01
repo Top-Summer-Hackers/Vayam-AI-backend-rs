@@ -45,5 +45,5 @@ pub struct CreateBasicProposalSchema {
 pub struct CreateMilestoneSchema {
   pub description: String,
   pub deadline: String,
-  pub price: u16,
+  pub price: usize,
 }

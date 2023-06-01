@@ -7,7 +7,7 @@ use crate::schema::{
 };
 use crate::{model::UserModel, response::UserResponse, schema::CreateUserSchema};
 use mongodb::bson::oid::ObjectId;
-use mongodb::bson::{self, doc};
+use mongodb::bson::{self, doc, Document};
 
 pub fn build_user_document(
   body: &CreateUserSchema,
@@ -49,13 +49,13 @@ pub fn build_task_document(body: &CreateTaskSchema) -> Result<bson::Document> {
   Ok(document.clone())
 }
 
-pub fn build_proposal_document(body: &CreateProposalSchema) -> Result<bson::Document> {
+pub fn build_proposal_document(body: &CreateProposalSchema) -> Result<Document> {
   let (basic_proposal_body, milestones) = split_proposal_body(body);
   let milestone_document = build_milestones_document(&milestones)?;
+  //let price = price.to_string();
   let serialized_data = bson::to_bson(&basic_proposal_body).map_err(MongoSerializeBsonError)?;
   let document = serialized_data.as_document().unwrap();
-  let mut doc_with_milestones =
-    doc! {"milestones": milestone_document,"price": 12000, "accepted": false};
+  let mut doc_with_milestones = doc! {"milestones": milestone_document, "accepted": false};
   doc_with_milestones.extend(document.clone());
 
   Ok(doc_with_milestones)
@@ -102,22 +102,29 @@ pub fn doc_to_task_response(task: &TaskModel) -> Result<TaskResponse> {
 }
 
 pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResponse> {
+  let (milestones, price) = milestone_model_to_response(&proposal.milestones);
   let proposal_response = ProposalResponse {
     id: proposal.id.to_hex(),
     task_id: proposal.task_id.to_hex(),
     freelancer_id: proposal.freelancer_id.to_hex(),
-    milestones: milestone_model_to_response(&proposal.milestones),
-    price: proposal.price,
+    milestones,
+    price,
     accepted: proposal.accepted,
   };
   Ok(proposal_response)
 }
 
-pub fn milestone_model_to_response(vec_milestone: &Vec<MilestoneModel>) -> Vec<MilestoneResponse> {
-  vec_milestone
+pub fn milestone_model_to_response(
+  vec_milestone: &Vec<MilestoneModel>,
+) -> (Vec<MilestoneResponse>, usize) {
+  let price = vec_milestone
+    .iter()
+    .fold(0, |acc, milestone| acc + milestone.price);
+  let vec = vec_milestone
     .iter()
     .map(|milestone| doc_to_milestone_response(milestone))
-    .collect()
+    .collect();
+  (vec, price)
 }
 
 pub fn doc_to_milestone_response(milestone: &MilestoneModel) -> MilestoneResponse {

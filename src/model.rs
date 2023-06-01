@@ -33,7 +33,7 @@ pub struct ProposalModel {
   pub task_id: ObjectId,
   pub freelancer_id: ObjectId,
   pub milestones: Vec<MilestoneModel>,
-  pub price: u16,
+  //pub price: usize,
   pub accepted: bool,
 }
 
@@ -41,6 +41,6 @@ pub struct ProposalModel {
 pub struct MilestoneModel {
   pub description: String,
   pub deadline: String,
-  pub price: u16,
+  pub price: usize,
   pub status: String,
 }
