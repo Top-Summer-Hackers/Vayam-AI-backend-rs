@@ -18,7 +18,7 @@ Fetch all the client(provider or employee):
 
 Submit a new client(provider or employee):
 
-`curl -X POST http://localhost:8080/api/client -d '{"user_name":"Scroll",	"description":"zk","password":"123"}' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/client -d '{"_id": "0x546847854","user_name":"Scroll","description":"zk","password":"123"}' -H "content-type: application/json"`
 
 Fetch all the tasks:
 
@@ -34,7 +34,7 @@ Fetch all the proposals:
 
 Submit a new proposal:
 
-`curl -X POST http://localhost:8080/api/proposal -d '{"task_id": "1277275f86ec91ef968c6011","freelancer_id": "3377272986ec91ef968c6011","milestones": [{"description": "Dataset collection ","deadline": "12-05-2023","price": 220},{"description": "Cleanning dataset","deadline": "12-06-2023","price": 50}]}' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/proposal -d '{"task_id": "1","freelancer_id": "0x5456498798","milestones": [{"description": "Dataset collection ","deadline": "12-05-2023","price": 220},{"description": "Cleanning dataset","deadline": "12-06-2023","price": 50}]}' -H "content-type: application/json"`
 
 Fetch all the freelancers:
 
@@ -42,4 +42,4 @@ Fetch all the freelancers:
 
 Submit a new freelancer:
 
-`curl -X POST http://localhost:8080/api/freelancer -d '{"user_name":"Medhi",	"description":"Auditor","password":"123"}' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/freelancer -d '{"_id": "0x001546847854","user_name":"Medhi",	"description":"Auditor","password":"123"}' -H "content-type: application/json"`

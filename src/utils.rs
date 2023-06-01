@@ -32,7 +32,7 @@ pub fn map_object_id_to_string(vec: Option<Vec<ObjectId>>) -> Vec<String> {
 pub fn doc_to_user_response(user: &UserModel) -> Result<UserResponse> {
   let user_response = UserResponse {
     role: user.role.to_owned(),
-    id: user.id.to_hex(),
+    id: user.id.to_owned(),
     user_name: user.user_name.to_owned(),
     description: user.description.to_owned().unwrap(),
     password: user.password.to_owned(),
@@ -42,11 +42,12 @@ pub fn doc_to_user_response(user: &UserModel) -> Result<UserResponse> {
   Ok(user_response)
 }
 
-pub fn build_task_document(body: &CreateTaskSchema) -> Result<bson::Document> {
+pub fn build_task_document(body: &CreateTaskSchema, _id: String) -> Result<bson::Document> {
   let serialized_data = bson::to_bson(body).map_err(MongoSerializeBsonError)?;
   let document = serialized_data.as_document().unwrap();
-
-  Ok(document.clone())
+  let mut doc_with_id = doc! {"_id": _id};
+  doc_with_id.extend(document.clone());
+  Ok(doc_with_id)
 }
 
 pub fn build_proposal_document(body: &CreateProposalSchema, _id: String) -> Result<Document> {
@@ -90,7 +91,7 @@ pub fn build_milestones_document(body: &Vec<CreateMilestoneSchema>) -> Result<Ve
 
 pub fn doc_to_task_response(task: &TaskModel) -> Result<TaskResponse> {
   let task_response = TaskResponse {
-    id: task.id.to_hex(),
+    id: task.id.to_owned(),
     title: task.title.to_owned(),
     start_time: task.start_time.to_owned(),
     deadline: task.deadline.to_owned(),
@@ -107,7 +108,7 @@ pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResp
   let proposal_response = ProposalResponse {
     id: proposal.id.to_owned(),
     task_id: proposal.task_id.to_hex(),
-    freelancer_id: proposal.freelancer_id.to_hex(),
+    freelancer_id: proposal.freelancer_id.to_owned(),
     milestones,
     price,
     accepted: proposal.accepted,

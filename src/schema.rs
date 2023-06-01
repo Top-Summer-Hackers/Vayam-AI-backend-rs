@@ -7,6 +7,8 @@ pub struct ParamOptions {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateUserSchema {
+  #[serde(rename = "_id")]
+  pub _id: String, //Todo: serde no converte "id" into "_id"
   pub user_name: String,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,

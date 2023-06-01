@@ -124,7 +124,7 @@ impl DB {
 
     let new_id = insert_result
       .inserted_id
-      .as_object_id()
+      .as_str()
       .expect("issue with new _id");
 
     let client_model = match self
@@ -165,7 +165,13 @@ impl DB {
   }
 
   pub async fn create_task(&self, body: &CreateTaskSchema) -> Result<SingleTaskResponse> {
-    let document = build_task_document(body)?;
+    let _id = self
+      .tasks_collection
+      .count_documents(None, None)
+      .await
+      .map_err(MongoQueryError)?
+      + 1;
+    let document = build_task_document(body, _id.to_string())?;
 
     let options = IndexOptions::builder().unique(true).build();
     let index = IndexModel::builder()
@@ -193,7 +199,7 @@ impl DB {
 
     let new_id = insert_result
       .inserted_id
-      .as_object_id()
+      .as_str()
       .expect("issue with new _id");
 
     let task_model = match self
@@ -268,7 +274,7 @@ impl DB {
 
     let new_id = insert_result
       .inserted_id
-      .as_object_id()
+      .as_str()
       .expect("issue with new _id");
 
     let user_model = match self
@@ -316,7 +322,8 @@ impl DB {
       .proposals_collection
       .count_documents(None, None)
       .await
-      .unwrap();
+      .map_err(MongoQueryError)?
+      + 1;
     let document = build_proposal_document(body, _id.to_string())?;
 
     let insert_result = match self.proposals_collection.insert_one(&document, None).await {
