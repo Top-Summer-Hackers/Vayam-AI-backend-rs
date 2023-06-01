@@ -1,6 +1,11 @@
 use std::sync::Arc;
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum::{
+  extract::{Path, State},
+  http::StatusCode,
+  response::IntoResponse,
+  Json,
+};
 
 use crate::{
   error::MyError,
@@ -91,6 +96,21 @@ pub async fn submit_proposal_handler(
   match app_state
     .db
     .submit_proposal(&body)
+    .await
+    .map_err(MyError::from)
+  {
+    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
+    Err(e) => Err(e.into()),
+  }
+}
+
+pub async fn aprove_proposal_handler(
+  Path(proposal_id): Path<String>,
+  State(app_state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state
+    .db
+    .aprove_proposal(&proposal_id)
     .await
     .map_err(MyError::from)
   {

@@ -14,7 +14,7 @@ use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
 use futures::StreamExt;
 use mongodb::bson::{doc, Document};
-use mongodb::options::IndexOptions;
+use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Collection, IndexModel};
 #[derive(Clone, Debug)]
 pub struct DB {
@@ -361,64 +361,90 @@ impl DB {
     })
   }
 
-  // pub async fn fetch_milestones(&self) -> Result<MilestoneListResponse> {
-  //   let mut cursor = self
-  //     .milestones_collection_model
-  //     .find(None, None)
-  //     .await
-  //     .map_err(MongoQueryError)?;
+  pub async fn aprove_proposal(&self, id: &String) -> Result<SingleProposalResponse> {
+    let filter = doc! {"_id": id};
+    let update = doc! {"$set": {"accepted": true}};
 
-  //   let mut json_result: Vec<MilestoneResponse> = Vec::new();
-  //   while let Some(doc) = cursor.next().await {
-  //     json_result.push(doc_to_milestone_response(&doc.unwrap())?);
-  //   }
+    let options = FindOneAndUpdateOptions::builder()
+      .return_document(ReturnDocument::After)
+      .build();
 
-  //   Ok(MilestoneListResponse {
-  //     status: "Success",
-  //     results: json_result.len(),
-  //     milestones: json_result,
-  //   })
-  // }
+    if let Some(doc) = self
+      .proposals_collection_model
+      .find_one_and_update(filter, update, options)
+      .await
+      .map_err(MongoQueryError)?
+    {
+      let proposal = doc_to_proposal_response(&doc)?;
+      let proposal_response = SingleProposalResponse {
+        status: "Success",
+        data: ProposalData { task: proposal },
+      };
 
-  // pub async fn add_milestone(
-  //   &self,
-  //   body: &CreateMilestoneSchema,
-  // ) -> Result<SingleMilestoneResponse> {
-  //   let document = build_milestones_document(body)?;
-
-  //   let insert_result = match self.milestones_collection.insert_one(&document, None).await {
-  //     Ok(result) => result,
-  //     Err(e) => {
-  //       if e
-  //         .to_string()
-  //         .contains("E11000 duplicate key error collection")
-  //       {
-  //         return Err(MongoDuplicateError(e));
-  //       }
-  //       return Err(MongoQueryError(e));
-  //     }
-  //   };
-
-  //   let new_id = insert_result
-  //     .inserted_id
-  //     .as_object_id()
-  //     .expect("issue with new _id");
-
-  //   let milestone_model = match self
-  //     .milestones_collection_model
-  //     .find_one(doc! {"_id": new_id}, None)
-  //     .await
-  //   {
-  //     Ok(Some(doc)) => doc,
-  //     Ok(None) => return Err(NotFoundError(new_id.to_string())),
-  //     Err(e) => return Err(MongoQueryError(e)),
-  //   };
-
-  //   let milestone = doc_to_milestone_response(&milestone_model)?;
-
-  //   Ok(SingleMilestoneResponse {
-  //     status: "Success",
-  //     data: MilestoneData { milestone },
-  //   })
-  // }
+      Ok(proposal_response)
+    } else {
+      Err(NotFoundError(id.to_string()))
+    }
+  }
 }
+
+// pub async fn fetch_milestones(&self) -> Result<MilestoneListResponse> {
+//   let mut cursor = self
+//     .milestones_collection_model
+//     .find(None, None)
+//     .await
+//     .map_err(MongoQueryError)?;
+
+//   let mut json_result: Vec<MilestoneResponse> = Vec::new();
+//   while let Some(doc) = cursor.next().await {
+//     json_result.push(doc_to_milestone_response(&doc.unwrap())?);
+//   }
+
+//   Ok(MilestoneListResponse {
+//     status: "Success",
+//     results: json_result.len(),
+//     milestones: json_result,
+//   })
+// }
+
+// pub async fn add_milestone(
+//   &self,
+//   body: &CreateMilestoneSchema,
+// ) -> Result<SingleMilestoneResponse> {
+//   let document = build_milestones_document(body)?;
+
+//   let insert_result = match self.milestones_collection.insert_one(&document, None).await {
+//     Ok(result) => result,
+//     Err(e) => {
+//       if e
+//         .to_string()
+//         .contains("E11000 duplicate key error collection")
+//       {
+//         return Err(MongoDuplicateError(e));
+//       }
+//       return Err(MongoQueryError(e));
+//     }
+//   };
+
+//   let new_id = insert_result
+//     .inserted_id
+//     .as_object_id()
+//     .expect("issue with new _id");
+
+//   let milestone_model = match self
+//     .milestones_collection_model
+//     .find_one(doc! {"_id": new_id}, None)
+//     .await
+//   {
+//     Ok(Some(doc)) => doc,
+//     Ok(None) => return Err(NotFoundError(new_id.to_string())),
+//     Err(e) => return Err(MongoQueryError(e)),
+//   };
+
+//   let milestone = doc_to_milestone_response(&milestone_model)?;
+
+//   Ok(SingleMilestoneResponse {
+//     status: "Success",
+//     data: MilestoneData { milestone },
+//   })
+// }
