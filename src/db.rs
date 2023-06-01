@@ -1,15 +1,14 @@
 use crate::error::MyError;
 use crate::model::{MilestoneModel, ProposalModel, TaskModel};
 use crate::response::{
-  MilestoneData, MilestoneListResponse, MilestoneResponse, ProposalData, ProposalListResponse,
-  ProposalResponse, SingleMilestoneResponse, SingleProposalResponse, SingleTaskResponse,
+  ProposalData, ProposalListResponse, ProposalResponse, SingleProposalResponse, SingleTaskResponse,
   SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData, UserResponse,
   UsersListResponse,
 };
-use crate::schema::{CreateMilestoneSchema, CreateProposalSchema, CreateTaskSchema};
+use crate::schema::{CreateProposalSchema, CreateTaskSchema};
 use crate::utils::{
-  build_milestones_document, build_proposal_document, build_task_document, build_user_document,
-  doc_to_milestone_response, doc_to_proposal_response, doc_to_task_response, doc_to_user_response,
+  build_proposal_document, build_task_document, build_user_document, doc_to_proposal_response,
+  doc_to_task_response, doc_to_user_response,
 };
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
@@ -27,8 +26,6 @@ pub struct DB {
   pub freelancer_collection: Collection<Document>,
   pub proposals_collection_model: Collection<ProposalModel>,
   pub proposals_collection: Collection<Document>,
-  pub milestones_collection_model: Collection<MilestoneModel>,
-  pub milestones_collection: Collection<Document>,
 }
 
 pub type Result<T> = std::result::Result<T, MyError>;
@@ -46,8 +43,6 @@ impl DB {
       .expect("MONGODB_FREELANCERS_COLLECTION must be set.");
     let proposals_collection_name = std::env::var("MONGODB_PROPOSALS_COLLECTION")
       .expect("MONGODB_PROPOSALS_COLLECTION must be set.");
-    let milestones_collection_name = std::env::var("MONGODB_MILESTONES_COLLECTION")
-      .expect("MONGODB_MILESTONES_COLLECTION must be set.");
 
     let mut client_options = ClientOptions::parse(mongodb_uri).await?;
     client_options.app_name = Some(database_name.to_string());
@@ -64,9 +59,6 @@ impl DB {
       database.collection::<Document>(freelancers_collection_name.as_str());
     let proposals_collection_model = database.collection(proposals_collection_name.as_str());
     let proposals_collection = database.collection::<Document>(proposals_collection_name.as_str());
-    let milestones_collection_model = database.collection(milestones_collection_name.as_str());
-    let milestones_collection =
-      database.collection::<Document>(milestones_collection_name.as_str());
 
     println!("✅ Database connected successfully");
 
@@ -79,8 +71,6 @@ impl DB {
       freelancer_collection,
       proposals_collection_model,
       proposals_collection,
-      milestones_collection_model,
-      milestones_collection,
     })
   }
 
@@ -360,64 +350,64 @@ impl DB {
     })
   }
 
-  pub async fn fetch_milestones(&self) -> Result<MilestoneListResponse> {
-    let mut cursor = self
-      .milestones_collection_model
-      .find(None, None)
-      .await
-      .map_err(MongoQueryError)?;
+  // pub async fn fetch_milestones(&self) -> Result<MilestoneListResponse> {
+  //   let mut cursor = self
+  //     .milestones_collection_model
+  //     .find(None, None)
+  //     .await
+  //     .map_err(MongoQueryError)?;
 
-    let mut json_result: Vec<MilestoneResponse> = Vec::new();
-    while let Some(doc) = cursor.next().await {
-      json_result.push(doc_to_milestone_response(&doc.unwrap())?);
-    }
+  //   let mut json_result: Vec<MilestoneResponse> = Vec::new();
+  //   while let Some(doc) = cursor.next().await {
+  //     json_result.push(doc_to_milestone_response(&doc.unwrap())?);
+  //   }
 
-    Ok(MilestoneListResponse {
-      status: "Success",
-      results: json_result.len(),
-      milestones: json_result,
-    })
-  }
+  //   Ok(MilestoneListResponse {
+  //     status: "Success",
+  //     results: json_result.len(),
+  //     milestones: json_result,
+  //   })
+  // }
 
-  pub async fn add_milestone(
-    &self,
-    body: &CreateMilestoneSchema,
-  ) -> Result<SingleMilestoneResponse> {
-    let document = build_milestones_document(body)?;
+  // pub async fn add_milestone(
+  //   &self,
+  //   body: &CreateMilestoneSchema,
+  // ) -> Result<SingleMilestoneResponse> {
+  //   let document = build_milestones_document(body)?;
 
-    let insert_result = match self.milestones_collection.insert_one(&document, None).await {
-      Ok(result) => result,
-      Err(e) => {
-        if e
-          .to_string()
-          .contains("E11000 duplicate key error collection")
-        {
-          return Err(MongoDuplicateError(e));
-        }
-        return Err(MongoQueryError(e));
-      }
-    };
+  //   let insert_result = match self.milestones_collection.insert_one(&document, None).await {
+  //     Ok(result) => result,
+  //     Err(e) => {
+  //       if e
+  //         .to_string()
+  //         .contains("E11000 duplicate key error collection")
+  //       {
+  //         return Err(MongoDuplicateError(e));
+  //       }
+  //       return Err(MongoQueryError(e));
+  //     }
+  //   };
 
-    let new_id = insert_result
-      .inserted_id
-      .as_object_id()
-      .expect("issue with new _id");
+  //   let new_id = insert_result
+  //     .inserted_id
+  //     .as_object_id()
+  //     .expect("issue with new _id");
 
-    let milestone_model = match self
-      .milestones_collection_model
-      .find_one(doc! {"_id": new_id}, None)
-      .await
-    {
-      Ok(Some(doc)) => doc,
-      Ok(None) => return Err(NotFoundError(new_id.to_string())),
-      Err(e) => return Err(MongoQueryError(e)),
-    };
+  //   let milestone_model = match self
+  //     .milestones_collection_model
+  //     .find_one(doc! {"_id": new_id}, None)
+  //     .await
+  //   {
+  //     Ok(Some(doc)) => doc,
+  //     Ok(None) => return Err(NotFoundError(new_id.to_string())),
+  //     Err(e) => return Err(MongoQueryError(e)),
+  //   };
 
-    let milestone = doc_to_milestone_response(&milestone_model)?;
+  //   let milestone = doc_to_milestone_response(&milestone_model)?;
 
-    Ok(SingleMilestoneResponse {
-      status: "Success",
-      data: MilestoneData { milestone },
-    })
-  }
+  //   Ok(SingleMilestoneResponse {
+  //     status: "Success",
+  //     data: MilestoneData { milestone },
+  //   })
+  // }
 }

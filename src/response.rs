@@ -27,14 +27,13 @@ pub struct ProposalResponse {
   pub id: String,
   pub task_id: String,
   pub freelancer_id: String,
-  pub milestones: Vec<String>,
+  pub milestones: Vec<MilestoneResponse>,
   pub price: u16,
   pub accepted: bool,
 }
 
 #[derive(Serialize, Debug)]
 pub struct MilestoneResponse {
-  pub id: String,
   pub description: String,
   pub deadline: String,
   pub price: u16,
