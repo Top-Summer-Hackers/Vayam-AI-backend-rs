@@ -49,13 +49,14 @@ pub fn build_task_document(body: &CreateTaskSchema) -> Result<bson::Document> {
   Ok(document.clone())
 }
 
-pub fn build_proposal_document(body: &CreateProposalSchema) -> Result<Document> {
+pub fn build_proposal_document(body: &CreateProposalSchema, _id: String) -> Result<Document> {
   let (basic_proposal_body, milestones) = split_proposal_body(body);
   let milestone_document = build_milestones_document(&milestones)?;
   //let price = price.to_string();
   let serialized_data = bson::to_bson(&basic_proposal_body).map_err(MongoSerializeBsonError)?;
   let document = serialized_data.as_document().unwrap();
-  let mut doc_with_milestones = doc! {"milestones": milestone_document, "accepted": false};
+  let mut doc_with_milestones =
+    doc! {"_id": _id, "milestones": milestone_document, "accepted": false};
   doc_with_milestones.extend(document.clone());
 
   Ok(doc_with_milestones)
@@ -104,7 +105,7 @@ pub fn doc_to_task_response(task: &TaskModel) -> Result<TaskResponse> {
 pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResponse> {
   let (milestones, price) = milestone_model_to_response(&proposal.milestones);
   let proposal_response = ProposalResponse {
-    id: proposal.id.to_hex(),
+    id: proposal.id.to_owned(),
     task_id: proposal.task_id.to_hex(),
     freelancer_id: proposal.freelancer_id.to_hex(),
     milestones,

@@ -312,7 +312,12 @@ impl DB {
     &self,
     body: &CreateProposalSchema,
   ) -> Result<SingleProposalResponse> {
-    let document = build_proposal_document(body)?;
+    let _id = self
+      .proposals_collection
+      .count_documents(None, None)
+      .await
+      .unwrap();
+    let document = build_proposal_document(body, _id.to_string())?;
 
     let insert_result = match self.proposals_collection.insert_one(&document, None).await {
       Ok(result) => result,
@@ -329,9 +334,8 @@ impl DB {
 
     let new_id = insert_result
       .inserted_id
-      .as_object_id()
+      .as_str()
       .expect("issue with new _id");
-
     let proposal_model = match self
       .proposals_collection_model
       .find_one(doc! {"_id": new_id}, None)

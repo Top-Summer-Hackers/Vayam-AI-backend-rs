@@ -29,7 +29,7 @@ pub struct TaskModel {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProposalModel {
   #[serde(rename = "_id")]
-  pub id: ObjectId,
+  pub id: String,
   pub task_id: ObjectId,
   pub freelancer_id: ObjectId,
   pub milestones: Vec<MilestoneModel>,
