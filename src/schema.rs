@@ -25,7 +25,7 @@ pub struct CreateTaskSchema {
   pub skills: Vec<String>,
   pub bounty: u16,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub proposals: Option<Vec<String>>,
+  pub proposals_id: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

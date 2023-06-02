@@ -22,7 +22,7 @@ pub struct TaskModel {
   //#[validate(length(max = 5))]
   pub skills: Vec<String>,
   pub bounty: u16,
-  pub proposals: Option<Vec<String>>,
+  pub proposals_id: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -19,7 +19,7 @@ pub struct TaskResponse {
   pub description: String,
   pub skills: Vec<String>,
   pub bounty: u16,
-  pub proposals: Vec<String>,
+  pub proposals_id: Vec<String>,
 }
 
 #[derive(Serialize, Debug)]
