@@ -164,6 +164,26 @@ impl DB {
     })
   }
 
+  pub async fn get_task(&self, skill: &str) -> Result<TaskListResponse> {
+    let mut task = self
+      .tasks_collection_model
+      .find(doc! {"skills": skill}, None)
+      .await
+      .map_err(MongoQueryError)?;
+
+    let mut json_result: Vec<TaskResponse> = Vec::new();
+    while let Some(doc) = task.next().await {
+      json_result.push(doc_to_task_response(&doc.unwrap())?);
+    }
+    println!("{:?}", json_result);
+
+    Ok(TaskListResponse {
+      status: "Success",
+      results: json_result.len(),
+      tasks: json_result,
+    })
+  }
+
   pub async fn create_task(&self, body: &CreateTaskSchema) -> Result<SingleTaskResponse> {
     let _id = self
       .tasks_collection

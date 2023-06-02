@@ -1,11 +1,15 @@
 use crate::{
   handler::{
-    add_client_handler, add_freelancer_handler, create_task_handler, list_clients_handler,
-    list_freelancers_handler, list_proposal_handler, list_tasks_handler, submit_proposal_handler,
+    add_client_handler, add_freelancer_handler, create_task_handler, get_task_handler,
+    list_clients_handler, list_freelancers_handler, list_proposal_handler, list_tasks_handler,
+    submit_proposal_handler,
   },
   AppState,
 };
-use axum::{routing::post, Router};
+use axum::{
+  routing::{get, post},
+  Router,
+};
 use std::sync::Arc;
 
 pub fn create_router(app_state: Arc<AppState>) -> Router {
@@ -18,6 +22,7 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
       "/api/task",
       post(create_task_handler).get(list_tasks_handler),
     )
+    .route("/api/task/:skill", get(get_task_handler))
     .route(
       "/api/freelancer",
       post(add_freelancer_handler).get(list_freelancers_handler),

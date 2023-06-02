@@ -1,6 +1,11 @@
 use std::sync::Arc;
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum::{
+  extract::{Path, State},
+  http::StatusCode,
+  response::IntoResponse,
+  Json,
+};
 
 use crate::{
   error::MyError,
@@ -31,6 +36,16 @@ pub async fn list_tasks_handler(
   State(app_state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
   match app_state.db.fetch_tasks().await.map_err(MyError::from) {
+    Ok(res) => Ok(Json(res)),
+    Err(e) => Err(e.into()),
+  }
+}
+
+pub async fn get_task_handler(
+  Path(skill): Path<String>,
+  State(app_state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state.db.get_task(&skill).await.map_err(MyError::from) {
     Ok(res) => Ok(Json(res)),
     Err(e) => Err(e.into()),
   }
