@@ -14,7 +14,7 @@ pub struct CreateUserSchema {
   pub description: Option<String>,
   pub password: String,
   // #[serde(skip_serializing_if = "Option::is_none")]
-  // pub tasks: Option<Vec<String>>,
+  // pub tasks_id: Option<Vec<String>>,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateTaskSchema {

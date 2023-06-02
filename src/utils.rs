@@ -1,12 +1,11 @@
 use crate::db::Result;
 use crate::error::MyError::MongoSerializeBsonError;
-use crate::model::{MilestoneModel, ProposalModel, TaskModel};
-use crate::response::{MilestoneResponse, ProposalResponse, TaskResponse};
+use crate::model::{DealModel, MilestoneModel, ProposalModel, TaskModel};
+use crate::response::{DealResponse, MilestoneResponse, ProposalResponse, TaskResponse};
 use crate::schema::{
   CreateBasicProposalSchema, CreateMilestoneSchema, CreateProposalSchema, CreateTaskSchema,
 };
 use crate::{model::UserModel, response::UserResponse, schema::CreateUserSchema};
-use mongodb::bson::oid::ObjectId;
 use mongodb::bson::{self, doc, Document};
 
 pub fn build_user_document(
@@ -22,12 +21,12 @@ pub fn build_user_document(
   Ok(doc_with_description)
 }
 
-pub fn map_object_id_to_string(vec: Option<Vec<ObjectId>>) -> Vec<String> {
-  match vec {
-    Some(vec) => vec.iter().map(|id| id.to_hex()).collect(),
-    None => return Vec::new(),
-  }
-}
+// pub fn map_object_id_to_string(vec: Option<Vec<ObjectId>>) -> Vec<String> {
+//   match vec {
+//     Some(vec) => vec.iter().map(|id| id.to_hex()).collect(),
+//     None => return Vec::new(),
+//   }
+// }
 
 pub fn doc_to_user_response(user: &UserModel) -> Result<UserResponse> {
   let user_response = UserResponse {
@@ -36,7 +35,7 @@ pub fn doc_to_user_response(user: &UserModel) -> Result<UserResponse> {
     user_name: user.user_name.to_owned(),
     description: user.description.to_owned().unwrap(),
     password: user.password.to_owned(),
-    tasks: map_object_id_to_string(user.tasks.to_owned()),
+    tasks_id: user.tasks_id.to_owned().unwrap(),
   };
 
   Ok(user_response)
@@ -61,6 +60,15 @@ pub fn build_proposal_document(body: &CreateProposalSchema, _id: String) -> Resu
   doc_with_milestones.extend(document.clone());
 
   Ok(doc_with_milestones)
+}
+
+pub fn build_deal_document(_id: String, partial_deal: &DealResponse) -> Result<Document> {
+  let serialized_data = bson::to_bson(&partial_deal).map_err(MongoSerializeBsonError)?;
+  let document = serialized_data.as_document().unwrap();
+
+  let mut doc_with_id = doc! {"_id": _id};
+  doc_with_id.extend(document.clone());
+  Ok(doc_with_id)
 }
 
 pub fn split_proposal_body(
@@ -98,7 +106,7 @@ pub fn doc_to_task_response(task: &TaskModel) -> Result<TaskResponse> {
     description: task.description.to_owned(),
     skills: task.skills.to_owned(),
     bounty: task.bounty,
-    proposals: map_object_id_to_string(task.proposals.to_owned()),
+    proposals: task.proposals.to_owned().unwrap(),
   };
   Ok(task_response)
 }
@@ -114,6 +122,49 @@ pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResp
     accepted: proposal.accepted,
   };
   Ok(proposal_response)
+}
+
+pub fn doc_to_proposal_and_deal_response(
+  proposal: &ProposalModel,
+) -> Result<(ProposalResponse, DealResponse)> {
+  let (milestones, price) = milestone_model_to_response(&proposal.milestones);
+  let proposal_response = ProposalResponse {
+    id: proposal.id.to_owned(),
+    task_id: proposal.task_id.to_owned(),
+    freelancer_id: proposal.freelancer_id.to_owned(),
+    milestones,
+    price,
+    accepted: proposal.accepted,
+  };
+
+  let partial_deal_response = DealResponse {
+    id: "".to_owned(),
+    task_id: proposal.task_id.to_owned(),
+    proposal_id: proposal.id.to_owned(),
+    freelancer_id: proposal.freelancer_id.to_owned(),
+    client_id: "".to_owned(),
+    price,
+    status: "Initialized".to_string(),
+    address: "0x0".to_string(),
+  };
+  Ok((proposal_response, partial_deal_response))
+}
+
+pub fn docs_to_deal_response(
+  deal: &DealModel,
+  partial_deal: &DealResponse,
+) -> Result<DealResponse> {
+  let deal_response = DealResponse {
+    id: deal._id.to_owned(),
+    task_id: partial_deal.task_id.to_owned(),
+    proposal_id: partial_deal.proposal_id.to_owned(),
+    freelancer_id: partial_deal.freelancer_id.to_owned(),
+    client_id: partial_deal.client_id.to_owned(),
+    price: partial_deal.price,
+    status: partial_deal.status.to_owned(),
+    address: partial_deal.address.to_owned(),
+  };
+  Ok(deal_response)
 }
 
 pub fn milestone_model_to_response(

@@ -1,20 +1,21 @@
 use crate::error::MyError;
-use crate::model::{ProposalModel, TaskModel};
+use crate::model::{DealModel, ProposalModel, TaskModel};
 use crate::response::{
-  ProposalData, ProposalListResponse, ProposalResponse, SingleProposalResponse, SingleTaskResponse,
-  SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData, UserResponse,
-  UsersListResponse,
+  DealResponse, ProposalData, ProposalListResponse, ProposalResponse, SingleProposalResponse,
+  SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData,
+  UserResponse, UsersListResponse,
 };
 use crate::schema::{CreateProposalSchema, CreateTaskSchema};
 use crate::utils::{
-  build_proposal_document, build_task_document, build_user_document, doc_to_proposal_response,
-  doc_to_task_response, doc_to_user_response,
+  build_deal_document, build_proposal_document, build_task_document, build_user_document,
+  doc_to_proposal_and_deal_response, doc_to_proposal_response, doc_to_task_response,
+  doc_to_user_response, docs_to_deal_response,
 };
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
 use futures::StreamExt;
 use mongodb::bson::{doc, Document};
-use mongodb::options::IndexOptions;
+use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Collection, IndexModel};
 #[derive(Clone, Debug)]
 pub struct DB {
@@ -26,6 +27,8 @@ pub struct DB {
   pub freelancer_collection: Collection<Document>,
   pub proposals_collection_model: Collection<ProposalModel>,
   pub proposals_collection: Collection<Document>,
+  pub deals_collection_model: Collection<DealModel>,
+  pub deals_collection: Collection<Document>,
 }
 
 pub type Result<T> = std::result::Result<T, MyError>;
@@ -43,6 +46,8 @@ impl DB {
       .expect("MONGODB_FREELANCERS_COLLECTION must be set.");
     let proposals_collection_name = std::env::var("MONGODB_PROPOSALS_COLLECTION")
       .expect("MONGODB_PROPOSALS_COLLECTION must be set.");
+    let deals_collection_name =
+      std::env::var("MONGODB_DEALS_COLLECTION").expect("MONGODB_DEALS_COLLECTION must be set.");
 
     let mut client_options = ClientOptions::parse(mongodb_uri).await?;
     client_options.app_name = Some(database_name.to_string());
@@ -59,6 +64,8 @@ impl DB {
       database.collection::<Document>(freelancers_collection_name.as_str());
     let proposals_collection_model = database.collection(proposals_collection_name.as_str());
     let proposals_collection = database.collection::<Document>(proposals_collection_name.as_str());
+    let deals_collection_model = database.collection(deals_collection_name.as_str());
+    let deals_collection = database.collection::<Document>(deals_collection_name.as_str());
 
     println!("✅ Database connected successfully");
 
@@ -71,6 +78,8 @@ impl DB {
       freelancer_collection,
       proposals_collection_model,
       proposals_collection,
+      deals_collection_model,
+      deals_collection,
     })
   }
 
@@ -377,68 +386,78 @@ impl DB {
 
     Ok(SingleProposalResponse {
       status: "Success",
-      data: ProposalData { task: proposal },
+      data: ProposalData { proposal },
     })
   }
 
-  // pub async fn fetch_milestones(&self) -> Result<MilestoneListResponse> {
-  //   let mut cursor = self
-  //     .milestones_collection_model
-  //     .find(None, None)
-  //     .await
-  //     .map_err(MongoQueryError)?;
+  pub async fn aprove_proposal(&self, proposal_id: &String) -> Result<SingleProposalResponse> {
+    let filter = doc! {"_id": proposal_id};
+    let update = doc! {"$set": {"accepted": true}};
 
-  //   let mut json_result: Vec<MilestoneResponse> = Vec::new();
-  //   while let Some(doc) = cursor.next().await {
-  //     json_result.push(doc_to_milestone_response(&doc.unwrap())?);
-  //   }
+    let options = FindOneAndUpdateOptions::builder()
+      .return_document(ReturnDocument::After)
+      .build();
 
-  //   Ok(MilestoneListResponse {
-  //     status: "Success",
-  //     results: json_result.len(),
-  //     milestones: json_result,
-  //   })
-  // }
+    if let Some(doc) = self
+      .proposals_collection_model
+      .find_one_and_update(filter, update, options)
+      .await
+      .map_err(MongoQueryError)?
+    {
+      let (proposal, partial_deal) = doc_to_proposal_and_deal_response(&doc)?;
+      println!(
+        "proposal_id: {}, accepted: {}",
+        proposal_id, proposal.accepted
+      );
+      let deal = self.add_deal(&partial_deal).await?;
+      let proposal_response = SingleProposalResponse {
+        status: "Success",
+        data: ProposalData { proposal },
+      };
+      Ok(proposal_response)
+    } else {
+      Err(NotFoundError(proposal_id.to_string()))
+    }
+  }
 
-  // pub async fn add_milestone(
-  //   &self,
-  //   body: &CreateMilestoneSchema,
-  // ) -> Result<SingleMilestoneResponse> {
-  //   let document = build_milestones_document(body)?;
+  pub async fn add_deal(&self, partial_deal: &DealResponse) -> Result<DealResponse> {
+    let _id = self
+      .deals_collection
+      .count_documents(None, None)
+      .await
+      .map_err(MongoQueryError)?
+      + 1;
+    let _id = _id.to_string();
 
-  //   let insert_result = match self.milestones_collection.insert_one(&document, None).await {
-  //     Ok(result) => result,
-  //     Err(e) => {
-  //       if e
-  //         .to_string()
-  //         .contains("E11000 duplicate key error collection")
-  //       {
-  //         return Err(MongoDuplicateError(e));
-  //       }
-  //       return Err(MongoQueryError(e));
-  //     }
-  //   };
+    let document = build_deal_document(_id.to_string(), partial_deal)?;
 
-  //   let new_id = insert_result
-  //     .inserted_id
-  //     .as_object_id()
-  //     .expect("issue with new _id");
+    let insert_result = match self.deals_collection.insert_one(&document, None).await {
+      Ok(result) => result,
+      Err(e) => {
+        if e
+          .to_string()
+          .contains("E11000 duplicate key error collection")
+        {
+          return Err(MongoDuplicateError(e));
+        }
+        return Err(MongoQueryError(e));
+      }
+    };
 
-  //   let milestone_model = match self
-  //     .milestones_collection_model
-  //     .find_one(doc! {"_id": new_id}, None)
-  //     .await
-  //   {
-  //     Ok(Some(doc)) => doc,
-  //     Ok(None) => return Err(NotFoundError(new_id.to_string())),
-  //     Err(e) => return Err(MongoQueryError(e)),
-  //   };
+    let new_id = insert_result
+      .inserted_id
+      .as_str()
+      .expect("issue with new _id");
 
-  //   let milestone = doc_to_milestone_response(&milestone_model)?;
-
-  //   Ok(SingleMilestoneResponse {
-  //     status: "Success",
-  //     data: MilestoneData { milestone },
-  //   })
-  // }
+    let deal_model = match self
+      .deals_collection_model
+      .find_one(doc! {"_id": new_id}, None)
+      .await
+    {
+      Ok(Some(doc)) => doc,
+      Ok(None) => return Err(NotFoundError(new_id.to_string())),
+      Err(e) => return Err(MongoQueryError(e)),
+    };
+    docs_to_deal_response(&deal_model, partial_deal)
+  }
 }
