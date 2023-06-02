@@ -40,6 +40,10 @@ Submit a new proposal:
 
 `curl -X POST http://localhost:8080/api/proposal -d '{"task_id": "1","freelancer_id": "0x5456498798","milestones": [{"description": "Dataset collection ","deadline": "12-05-2023","price": 220},{"description": "Cleanning dataset","deadline": "12-06-2023","price": 50}]}' -H "content-type: application/json"`
 
+Approve a proposal:
+
+`curl -X PATCH http://localhost:8080/api/proposal/{proposal_id}`
+
 Fetch all the freelancers:
 
 `curl http://localhost:8080/api/freelancer`
