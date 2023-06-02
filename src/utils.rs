@@ -123,6 +123,20 @@ pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResp
   Ok(proposal_response)
 }
 
+pub fn doc_to_deal_response(deal: &DealModel) -> Result<DealResponse> {
+  let deal_response = DealResponse {
+    id: deal.id.to_owned(),
+    task_id: deal.task_id.to_owned(),
+    proposal_id: deal.proposal_id.to_owned(),
+    freelancer_id: deal.freelancer_id.to_owned(),
+    client_id: deal.client_id.to_owned(),
+    price: deal.price,
+    status: deal.status.to_owned(),
+    address: deal.address.to_owned(),
+  };
+  Ok(deal_response)
+}
+
 pub fn doc_to_proposal_and_deal_response(
   proposal: &ProposalModel,
 ) -> Result<(ProposalResponse, PartialDealResponse)> {
@@ -153,7 +167,7 @@ pub fn docs_to_deal_response(
   partial_deal: &PartialDealResponse,
 ) -> Result<DealResponse> {
   let deal_response = DealResponse {
-    id: deal._id.to_owned(),
+    id: deal.id.to_owned(),
     task_id: partial_deal.task_id.to_owned(),
     proposal_id: partial_deal.proposal_id.to_owned(),
     freelancer_id: partial_deal.freelancer_id.to_owned(),

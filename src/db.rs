@@ -1,15 +1,16 @@
 use crate::error::MyError;
 use crate::model::{DealModel, ProposalModel, TaskModel};
 use crate::response::{
-  DealResponse, PartialDealResponse, ProposalData, ProposalListResponse, ProposalResponse,
-  SingleProposalResponse, SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse,
-  TaskResponse, UserData, UserResponse, UsersListResponse,
+  DealListResponse, DealResponse, PartialDealResponse, ProposalData, ProposalDealData,
+  ProposalListResponse, ProposalResponse, SingleProposalDealResponse, SingleProposalResponse,
+  SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData,
+  UserResponse, UsersListResponse,
 };
 use crate::schema::{CreateProposalSchema, CreateTaskSchema};
 use crate::utils::{
   build_deal_document, build_proposal_document, build_task_document, build_user_document,
-  doc_to_proposal_and_deal_response, doc_to_proposal_response, doc_to_task_response,
-  doc_to_user_response, docs_to_deal_response,
+  doc_to_deal_response, doc_to_proposal_and_deal_response, doc_to_proposal_response,
+  doc_to_task_response, doc_to_user_response, docs_to_deal_response,
 };
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
@@ -389,7 +390,7 @@ impl DB {
     })
   }
 
-  pub async fn aprove_proposal(&self, proposal_id: &String) -> Result<SingleProposalResponse> {
+  pub async fn aprove_proposal(&self, proposal_id: &String) -> Result<SingleProposalDealResponse> {
     let filter = doc! {"_id": proposal_id};
     let update = doc! {"$set": {"accepted": true}};
 
@@ -404,14 +405,10 @@ impl DB {
       .map_err(MongoQueryError)?
     {
       let (proposal, partial_deal) = doc_to_proposal_and_deal_response(&doc)?;
-      println!(
-        "proposal_id: {}, accepted: {}",
-        proposal_id, proposal.accepted
-      );
       let deal = self.add_deal(&partial_deal).await?;
-      let proposal_response = SingleProposalResponse {
+      let proposal_response = SingleProposalDealResponse {
         status: "Success",
-        data: ProposalData { proposal },
+        data: ProposalDealData { proposal, deal },
       };
       Ok(proposal_response)
     } else {
@@ -458,5 +455,24 @@ impl DB {
       Err(e) => return Err(MongoQueryError(e)),
     };
     docs_to_deal_response(&deal_model, partial_deal)
+  }
+
+  pub async fn fetch_deals(&self) -> Result<DealListResponse> {
+    let mut cursor = self
+      .deals_collection_model
+      .find(None, None)
+      .await
+      .map_err(MongoQueryError)?;
+
+    let mut json_result: Vec<DealResponse> = Vec::new();
+    while let Some(doc) = cursor.next().await {
+      json_result.push(doc_to_deal_response(&doc.unwrap())?);
+    }
+
+    Ok(DealListResponse {
+      status: "Success",
+      results: json_result.len(),
+      deals: json_result,
+    })
   }
 }

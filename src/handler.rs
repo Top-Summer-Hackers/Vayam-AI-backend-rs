@@ -129,11 +129,11 @@ pub async fn aprove_proposal_handler(
   }
 }
 
-// pub async fn list_deals_handler(
-//   State(app_state): State<Arc<AppState>>,
-// ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-//   match app_state.db.fetch_deals().await.map_err(MyError::from) {
-//     Ok(res) => Ok(Json(res)),
-//     Err(e) => Err(e.into()),
-//   }
-// }
+pub async fn list_deals_handler(
+  State(app_state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state.db.fetch_deals().await.map_err(MyError::from) {
+    Ok(res) => Ok(Json(res)),
+    Err(e) => Err(e.into()),
+  }
+}

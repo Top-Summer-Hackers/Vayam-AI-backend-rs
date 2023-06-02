@@ -47,10 +47,11 @@ pub struct MilestoneModel {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DealModel {
   #[serde(rename = "_id")]
-  pub _id: String,
+  pub id: String,
   pub task_id: String,
   pub proposal_id: String,
   pub freelancer_id: String,
+  pub client_id: String,
   pub price: usize,
   pub status: String,
   pub address: String,
