@@ -32,7 +32,7 @@ Get task by skill:
 
 Submit a new task:
 
-`curl -X POST http://localhost:8080/api/task -d '{"title":"Create bank-end","start_time":"22/01/2023","deadline":"29/10/2023","description":"Back end on rust", "skills":["Solidity","Rust"],"bounty":400 }' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/task -d '{"client_id": "0x418564867486","title":"Create bank-end","start_time":"22/01/2023","deadline":"29/10/2023","description":"Back end on rust", "skills":["Solidity","Rust"],"bounty":400 }' -H "content-type: application/json"`
 
 Fetch all the proposals:
 
@@ -40,11 +40,15 @@ Fetch all the proposals:
 
 Submit a new proposal:
 
-`curl -X POST http://localhost:8080/api/proposal -d '{"task_id": "1","freelancer_id": "0x5456498798","milestones": [{"description": "Dataset collection ","deadline": "12-05-2023","price": 220},{"description": "Cleanning dataset","deadline": "12-06-2023","price": 50}]}' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/proposal -d '{"client_id": "0x418564867486","task_id": "1","freelancer_id": "0x5456498798","milestones": [{"description": "Dataset collection ","deadline": "12-05-2023","price": 220},{"description": "Cleanning dataset","deadline": "12-06-2023","price": 50}]}' -H "content-type: application/json"`
 
 Approve a proposal:
 
 `curl -X PATCH http://localhost:8080/api/proposal/{proposal_id}`
+
+Fetch all the deals:
+
+`curl http://localhost:8080/api/deals`
 
 Fetch all the freelancers:
 
