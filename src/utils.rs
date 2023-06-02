@@ -107,7 +107,7 @@ pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResp
   let (milestones, price) = milestone_model_to_response(&proposal.milestones);
   let proposal_response = ProposalResponse {
     id: proposal.id.to_owned(),
-    task_id: proposal.task_id.to_hex(),
+    task_id: proposal.task_id.to_owned(),
     freelancer_id: proposal.freelancer_id.to_owned(),
     milestones,
     price,

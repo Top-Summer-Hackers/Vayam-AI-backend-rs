@@ -30,7 +30,7 @@ pub struct TaskModel {
 pub struct ProposalModel {
   #[serde(rename = "_id")]
   pub id: String,
-  pub task_id: ObjectId,
+  pub task_id: String,
   pub freelancer_id: String,
   pub milestones: Vec<MilestoneModel>,
   //pub price: usize,
