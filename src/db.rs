@@ -1,11 +1,9 @@
-use core::task;
-
 use crate::error::MyError;
 use crate::model::{DealModel, ProposalModel, TaskModel};
 use crate::response::{
-  DealData, DealResponse, ProposalData, ProposalListResponse, ProposalResponse, SingleDealResponse,
-  SingleProposalResponse, SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse,
-  TaskResponse, UserData, UserResponse, UsersListResponse,
+  DealResponse, ProposalData, ProposalListResponse, ProposalResponse, SingleProposalResponse,
+  SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData,
+  UserResponse, UsersListResponse,
 };
 use crate::schema::{CreateProposalSchema, CreateTaskSchema};
 use crate::utils::{

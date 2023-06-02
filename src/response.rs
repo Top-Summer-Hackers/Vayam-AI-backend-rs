@@ -105,10 +105,10 @@ pub struct SingleMilestoneResponse {
   pub data: MilestoneData,
 }
 
-pub struct SingleDealResponse {
-  pub status: &'static str,
-  pub data: DealData,
-}
+// pub struct SingleDealResponse {
+//   pub status: &'static str,
+//   pub data: DealData,
+// }
 
 #[derive(Serialize, Debug)]
 pub struct TaskListResponse {

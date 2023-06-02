@@ -6,8 +6,6 @@ use crate::schema::{
   CreateBasicProposalSchema, CreateMilestoneSchema, CreateProposalSchema, CreateTaskSchema,
 };
 use crate::{model::UserModel, response::UserResponse, schema::CreateUserSchema};
-use axum::http::status;
-use mongodb::bson::oid::ObjectId;
 use mongodb::bson::{self, doc, Document};
 
 pub fn build_user_document(
@@ -23,12 +21,12 @@ pub fn build_user_document(
   Ok(doc_with_description)
 }
 
-pub fn map_object_id_to_string(vec: Option<Vec<ObjectId>>) -> Vec<String> {
-  match vec {
-    Some(vec) => vec.iter().map(|id| id.to_hex()).collect(),
-    None => return Vec::new(),
-  }
-}
+// pub fn map_object_id_to_string(vec: Option<Vec<ObjectId>>) -> Vec<String> {
+//   match vec {
+//     Some(vec) => vec.iter().map(|id| id.to_hex()).collect(),
+//     None => return Vec::new(),
+//   }
+// }
 
 pub fn doc_to_user_response(user: &UserModel) -> Result<UserResponse> {
   let user_response = UserResponse {
@@ -65,16 +63,12 @@ pub fn build_proposal_document(body: &CreateProposalSchema, _id: String) -> Resu
 }
 
 pub fn build_deal_document(_id: String, partial_deal: &DealResponse) -> Result<Document> {
-  let task_id = partial_deal.task_id.to_owned();
-  let proposal_id = partial_deal.id.to_owned();
-  let freelancer_id = partial_deal.freelancer_id.to_owned();
-  let client_id = partial_deal.client_id.to_owned();
-  let price = partial_deal.price.to_string();
-  let status = partial_deal.status.to_owned();
-  let address = partial_deal.address.to_owned();
+  let serialized_data = bson::to_bson(&partial_deal).map_err(MongoSerializeBsonError)?;
+  let document = serialized_data.as_document().unwrap();
 
-  let doc = doc! {"_id": _id, "task_id": task_id, "proposal_id": proposal_id, "freelancer_id": freelancer_id, "client": client_id, "price": price, "status": status, "address": address};
-  Ok(doc)
+  let mut doc_with_id = doc! {"_id": _id};
+  doc_with_id.extend(document.clone());
+  Ok(doc_with_id)
 }
 
 pub fn split_proposal_body(
