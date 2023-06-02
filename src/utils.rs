@@ -21,21 +21,16 @@ pub fn build_user_document(
   Ok(doc_with_description)
 }
 
-// pub fn map_object_id_to_string(vec: Option<Vec<ObjectId>>) -> Vec<String> {
-//   match vec {
-//     Some(vec) => vec.iter().map(|id| id.to_hex()).collect(),
-//     None => return Vec::new(),
-//   }
-// }
-
 pub fn doc_to_user_response(user: &UserModel) -> Result<UserResponse> {
+  let tasks_id = user.tasks_id.to_owned().unwrap_or_else(Vec::new);
+
   let user_response = UserResponse {
     role: user.role.to_owned(),
     id: user.id.to_owned(),
     user_name: user.user_name.to_owned(),
     description: user.description.to_owned().unwrap(),
     password: user.password.to_owned(),
-    tasks_id: user.tasks_id.to_owned().unwrap(),
+    tasks_id,
   };
 
   Ok(user_response)
@@ -98,6 +93,8 @@ pub fn build_milestones_document(body: &Vec<CreateMilestoneSchema>) -> Result<Ve
 }
 
 pub fn doc_to_task_response(task: &TaskModel) -> Result<TaskResponse> {
+  let proposals_id = task.proposals_id.to_owned().unwrap_or_else(Vec::new);
+
   let task_response = TaskResponse {
     id: task.id.to_owned(),
     title: task.title.to_owned(),
@@ -106,7 +103,7 @@ pub fn doc_to_task_response(task: &TaskModel) -> Result<TaskResponse> {
     description: task.description.to_owned(),
     skills: task.skills.to_owned(),
     bounty: task.bounty,
-    proposals: task.proposals.to_owned().unwrap(),
+    proposals_id,
   };
   Ok(task_response)
 }
