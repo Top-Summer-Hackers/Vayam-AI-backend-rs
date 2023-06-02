@@ -15,6 +15,7 @@ pub struct UserModel {
 pub struct TaskModel {
   #[serde(rename = "_id")]
   pub id: String,
+  pub client_id: String,
   pub title: String,
   pub start_time: String,
   pub deadline: String,
@@ -29,6 +30,7 @@ pub struct TaskModel {
 pub struct ProposalModel {
   #[serde(rename = "_id")]
   pub id: String,
+  pub client_id: String,
   pub task_id: String,
   pub freelancer_id: String,
   pub milestones: Vec<MilestoneModel>,

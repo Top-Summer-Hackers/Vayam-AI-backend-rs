@@ -13,6 +13,7 @@ pub struct UserResponse {
 #[derive(Serialize, Debug)]
 pub struct TaskResponse {
   pub id: String,
+  pub client_id: String,
   pub title: String,
   pub start_time: String,
   pub deadline: String,
@@ -32,6 +33,7 @@ pub struct MilestoneResponse {
 #[derive(Serialize, Debug)]
 pub struct ProposalResponse {
   pub id: String,
+  pub client_id: String,
   pub task_id: String,
   pub freelancer_id: String,
   pub milestones: Vec<MilestoneResponse>,

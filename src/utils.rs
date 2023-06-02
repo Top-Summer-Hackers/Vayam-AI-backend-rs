@@ -49,7 +49,6 @@ pub fn build_task_document(body: &CreateTaskSchema, _id: String) -> Result<bson:
 pub fn build_proposal_document(body: &CreateProposalSchema, _id: String) -> Result<Document> {
   let (basic_proposal_body, milestones) = split_proposal_body(body);
   let milestone_document = build_milestones_document(&milestones)?;
-  //let price = price.to_string();
   let serialized_data = bson::to_bson(&basic_proposal_body).map_err(MongoSerializeBsonError)?;
   let document = serialized_data.as_document().unwrap();
   let mut doc_with_milestones =
@@ -72,6 +71,7 @@ pub fn split_proposal_body(
   body: &CreateProposalSchema,
 ) -> (CreateBasicProposalSchema, Vec<CreateMilestoneSchema>) {
   let proposal_body = CreateBasicProposalSchema {
+    client_id: body.client_id.to_owned(),
     task_id: body.task_id.to_owned(),
     freelancer_id: body.freelancer_id.to_owned(),
   };
@@ -99,6 +99,7 @@ pub fn doc_to_task_response(task: &TaskModel) -> Result<TaskResponse> {
 
   let task_response = TaskResponse {
     id: task.id.to_owned(),
+    client_id: task.client_id.to_owned(),
     title: task.title.to_owned(),
     start_time: task.start_time.to_owned(),
     deadline: task.deadline.to_owned(),
@@ -115,6 +116,7 @@ pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResp
   let proposal_response = ProposalResponse {
     id: proposal.id.to_owned(),
     task_id: proposal.task_id.to_owned(),
+    client_id: proposal.client_id.to_owned(),
     freelancer_id: proposal.freelancer_id.to_owned(),
     milestones,
     price,
@@ -143,6 +145,7 @@ pub fn doc_to_proposal_and_deal_response(
   let (milestones, price) = milestone_model_to_response(&proposal.milestones);
   let proposal_response = ProposalResponse {
     id: proposal.id.to_owned(),
+    client_id: proposal.client_id.to_owned(),
     task_id: proposal.task_id.to_owned(),
     freelancer_id: proposal.freelancer_id.to_owned(),
     milestones,
@@ -154,7 +157,7 @@ pub fn doc_to_proposal_and_deal_response(
     task_id: proposal.task_id.to_owned(),
     proposal_id: proposal.id.to_owned(),
     freelancer_id: proposal.freelancer_id.to_owned(),
-    client_id: "".to_owned(),
+    client_id: proposal.client_id.to_owned(),
     price,
     status: "Initialized".to_string(),
     address: "0x0".to_string(),

@@ -18,6 +18,7 @@ pub struct CreateUserSchema {
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateTaskSchema {
+  pub client_id: String,
   pub title: String,
   pub start_time: String,
   pub deadline: String,
@@ -30,6 +31,7 @@ pub struct CreateTaskSchema {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateProposalSchema {
+  pub client_id: String,
   pub task_id: String,
   pub freelancer_id: String,
   pub milestones: Vec<CreateMilestoneSchema>,
@@ -38,6 +40,7 @@ pub struct CreateProposalSchema {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateBasicProposalSchema {
+  pub client_id: String,
   pub task_id: String,
   pub freelancer_id: String,
   //pub price: u16,
