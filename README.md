@@ -10,6 +10,8 @@ With rustup `curl https://sh.rustup.rs -sSf | sh -s`
 2. Install all the project’s dependencies and build the project by running the command `cargo build`.
 3. Start the Axum-Backend HTTP server by running `cargo run`.
 
+4. If build fails, you might want to run `sudo apt install cmake` first.
+
 ## Test the API endpoints
 
 Fetch all the client(provider or employee):
