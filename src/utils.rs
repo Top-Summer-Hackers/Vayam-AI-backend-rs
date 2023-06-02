@@ -1,7 +1,9 @@
 use crate::db::Result;
 use crate::error::MyError::MongoSerializeBsonError;
 use crate::model::{DealModel, MilestoneModel, ProposalModel, TaskModel};
-use crate::response::{DealResponse, MilestoneResponse, ProposalResponse, TaskResponse};
+use crate::response::{
+  DealResponse, MilestoneResponse, PartialDealResponse, ProposalResponse, TaskResponse,
+};
 use crate::schema::{
   CreateBasicProposalSchema, CreateMilestoneSchema, CreateProposalSchema, CreateTaskSchema,
 };
@@ -57,7 +59,7 @@ pub fn build_proposal_document(body: &CreateProposalSchema, _id: String) -> Resu
   Ok(doc_with_milestones)
 }
 
-pub fn build_deal_document(_id: String, partial_deal: &DealResponse) -> Result<Document> {
+pub fn build_deal_document(_id: String, partial_deal: &PartialDealResponse) -> Result<Document> {
   let serialized_data = bson::to_bson(&partial_deal).map_err(MongoSerializeBsonError)?;
   let document = serialized_data.as_document().unwrap();
 
@@ -123,7 +125,7 @@ pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResp
 
 pub fn doc_to_proposal_and_deal_response(
   proposal: &ProposalModel,
-) -> Result<(ProposalResponse, DealResponse)> {
+) -> Result<(ProposalResponse, PartialDealResponse)> {
   let (milestones, price) = milestone_model_to_response(&proposal.milestones);
   let proposal_response = ProposalResponse {
     id: proposal.id.to_owned(),
@@ -134,8 +136,7 @@ pub fn doc_to_proposal_and_deal_response(
     accepted: proposal.accepted,
   };
 
-  let partial_deal_response = DealResponse {
-    id: "".to_owned(),
+  let partial_deal_response = PartialDealResponse {
     task_id: proposal.task_id.to_owned(),
     proposal_id: proposal.id.to_owned(),
     freelancer_id: proposal.freelancer_id.to_owned(),
@@ -149,7 +150,7 @@ pub fn doc_to_proposal_and_deal_response(
 
 pub fn docs_to_deal_response(
   deal: &DealModel,
-  partial_deal: &DealResponse,
+  partial_deal: &PartialDealResponse,
 ) -> Result<DealResponse> {
   let deal_response = DealResponse {
     id: deal._id.to_owned(),

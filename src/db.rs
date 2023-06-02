@@ -1,9 +1,9 @@
 use crate::error::MyError;
 use crate::model::{DealModel, ProposalModel, TaskModel};
 use crate::response::{
-  DealResponse, ProposalData, ProposalListResponse, ProposalResponse, SingleProposalResponse,
-  SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData,
-  UserResponse, UsersListResponse,
+  DealResponse, PartialDealResponse, ProposalData, ProposalListResponse, ProposalResponse,
+  SingleProposalResponse, SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse,
+  TaskResponse, UserData, UserResponse, UsersListResponse,
 };
 use crate::schema::{CreateProposalSchema, CreateTaskSchema};
 use crate::utils::{
@@ -184,7 +184,6 @@ impl DB {
     while let Some(doc) = task.next().await {
       json_result.push(doc_to_task_response(&doc.unwrap())?);
     }
-    println!("{:?}", json_result);
 
     Ok(TaskListResponse {
       status: "Success",
@@ -420,7 +419,7 @@ impl DB {
     }
   }
 
-  pub async fn add_deal(&self, partial_deal: &DealResponse) -> Result<DealResponse> {
+  pub async fn add_deal(&self, partial_deal: &PartialDealResponse) -> Result<DealResponse> {
     let _id = self
       .deals_collection
       .count_documents(None, None)

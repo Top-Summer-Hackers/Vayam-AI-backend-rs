@@ -52,6 +52,17 @@ pub struct DealResponse {
 }
 
 #[derive(Serialize, Debug)]
+pub struct PartialDealResponse {
+  pub task_id: String,
+  pub proposal_id: String,
+  pub freelancer_id: String,
+  pub client_id: String,
+  pub price: usize,
+  pub status: String,
+  pub address: String,
+}
+
+#[derive(Serialize, Debug)]
 pub struct UserData {
   pub user: UserResponse,
 }
