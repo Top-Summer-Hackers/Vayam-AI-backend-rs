@@ -24,6 +24,10 @@ Fetch all the tasks:
 
 `curl http://localhost:8080/api/task`
 
+Get task by skill:
+
+`curl http://localhost:8080/api/task/{:skill}`
+
 Submit a new task:
 
 `curl -X POST http://localhost:8080/api/task -d '{"title":"Create bank-end","start_time":"22/01/2023","deadline":"29/10/2023","description":"Back end on rust", "skills":["Solidity","Rust"],"bounty":400 }' -H "content-type: application/json"`
