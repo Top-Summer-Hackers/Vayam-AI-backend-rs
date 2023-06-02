@@ -387,20 +387,22 @@ impl DB {
       .map_err(MongoQueryError)?
     {
       let (proposal, partial_deal) = doc_to_proposal_and_deal_response(&doc)?;
+      println!(
+        "proposal_id: {}, accepted: {}",
+        proposal_id, proposal.accepted
+      );
+      let deal = self.add_deal(&partial_deal).await?;
       let proposal_response = SingleProposalResponse {
         status: "Success",
         data: ProposalData { proposal },
       };
-
-      //let deal_responde = self.add_deal(&partial_deal).await?;
-
       Ok(proposal_response)
     } else {
       Err(NotFoundError(proposal_id.to_string()))
     }
   }
 
-  pub async fn add_deal(&self, partial_deal: &DealResponse) -> Result<SingleDealResponse> {
+  pub async fn add_deal(&self, partial_deal: &DealResponse) -> Result<DealResponse> {
     let _id = self
       .deals_collection
       .count_documents(None, None)
@@ -408,11 +410,10 @@ impl DB {
       .map_err(MongoQueryError)?
       + 1;
     let _id = _id.to_string();
-    let proposal_id = &partial_deal.id;
 
-    let document = build_deal_document(_id.to_string(), &proposal_id)?;
+    let document = build_deal_document(_id.to_string(), partial_deal)?;
 
-    let insert_result = match self.client_collection.insert_one(&document, None).await {
+    let insert_result = match self.deals_collection.insert_one(&document, None).await {
       Ok(result) => result,
       Err(e) => {
         if e
@@ -439,11 +440,6 @@ impl DB {
       Ok(None) => return Err(NotFoundError(new_id.to_string())),
       Err(e) => return Err(MongoQueryError(e)),
     };
-    let deal = docs_to_deal_response(&deal_model, partial_deal)?;
-
-    Ok(SingleDealResponse {
-      status: "Success",
-      data: DealData { deal },
-    })
+    docs_to_deal_response(&deal_model, partial_deal)
   }
 }

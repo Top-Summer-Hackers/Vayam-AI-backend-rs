@@ -7,7 +7,7 @@ use crate::{
   AppState,
 };
 use axum::{
-  routing::{patch, post},
+  routing::{get, patch, post},
   Router,
 };
 use std::sync::Arc;
@@ -33,5 +33,6 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
         .patch(aprove_proposal_handler),
     )
     .route("/api/proposal/:proposal_id", patch(aprove_proposal_handler))
+    //.route("/api/deal", get(list_deals_handler))
     .with_state(app_state)
 }

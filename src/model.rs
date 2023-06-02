@@ -49,10 +49,10 @@ pub struct MilestoneModel {
 pub struct DealModel {
   #[serde(rename = "_id")]
   pub _id: String,
-  //  pub task_id: String,
+  pub task_id: String,
   pub proposal_id: String,
-  // pub freelancer_id: String,
-  // pub price: usize,
-  // pub status: String,
-  // pub address: String,
+  pub freelancer_id: String,
+  pub price: usize,
+  pub status: String,
+  pub address: String,
 }
