@@ -7,7 +7,7 @@ pub struct UserResponse {
   pub user_name: String,
   pub description: String,
   pub password: String,
-  pub tasks: Vec<String>,
+  pub tasks_id: Vec<String>,
 }
 
 #[derive(Serialize, Debug)]
@@ -23,6 +23,13 @@ pub struct TaskResponse {
 }
 
 #[derive(Serialize, Debug)]
+pub struct MilestoneResponse {
+  pub description: String,
+  pub deadline: String,
+  pub price: usize,
+  pub status: String,
+}
+#[derive(Serialize, Debug)]
 pub struct ProposalResponse {
   pub id: String,
   pub task_id: String,
@@ -33,15 +40,7 @@ pub struct ProposalResponse {
 }
 
 #[derive(Serialize, Debug)]
-pub struct MilestoneResponse {
-  pub description: String,
-  pub deadline: String,
-  pub price: usize,
-  pub status: String,
-}
-
-#[derive(Serialize, Debug)]
-pub struct Deal {
+pub struct DealResponse {
   pub id: String,
   pub task_id: String,
   pub proposal_id: String,
@@ -73,7 +72,7 @@ pub struct MilestoneData {
 
 #[derive(Serialize, Debug)]
 pub struct DealData {
-  pub deal: ProposalResponse,
+  pub deal: DealResponse,
 }
 
 #[derive(Serialize, Debug)]

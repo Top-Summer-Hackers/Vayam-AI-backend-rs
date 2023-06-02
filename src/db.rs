@@ -1,20 +1,20 @@
 use core::task;
 
 use crate::error::MyError;
-use crate::model::{ProposalModel, TaskModel};
+use crate::model::{DealModel, ProposalModel, TaskModel};
 use crate::response::{
-  ProposalData, ProposalListResponse, ProposalResponse, SingleDealResponse, SingleProposalResponse,
-  SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData,
-  UserResponse, UsersListResponse,
+  DealData, DealResponse, ProposalData, ProposalListResponse, ProposalResponse, SingleDealResponse,
+  SingleProposalResponse, SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse,
+  TaskResponse, UserData, UserResponse, UsersListResponse,
 };
 use crate::schema::{CreateProposalSchema, CreateTaskSchema};
 use crate::utils::{
-  build_proposal_document, build_task_document, build_user_document, doc_to_proposal_response,
-  doc_to_task_response, doc_to_user_response,
+  build_deal_document, build_proposal_document, build_task_document, build_user_document,
+  doc_to_proposal_and_deal_response, doc_to_proposal_response, doc_to_task_response,
+  doc_to_user_response, docs_to_deal_response,
 };
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
-use axum::http::status;
 use futures::StreamExt;
 use mongodb::bson::{doc, Document};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
@@ -29,6 +29,8 @@ pub struct DB {
   pub freelancer_collection: Collection<Document>,
   pub proposals_collection_model: Collection<ProposalModel>,
   pub proposals_collection: Collection<Document>,
+  pub deals_collection_model: Collection<DealModel>,
+  pub deals_collection: Collection<Document>,
 }
 
 pub type Result<T> = std::result::Result<T, MyError>;
@@ -46,6 +48,8 @@ impl DB {
       .expect("MONGODB_FREELANCERS_COLLECTION must be set.");
     let proposals_collection_name = std::env::var("MONGODB_PROPOSALS_COLLECTION")
       .expect("MONGODB_PROPOSALS_COLLECTION must be set.");
+    let deals_collection_name =
+      std::env::var("MONGODB_DEALS_COLLECTION").expect("MONGODB_DEALS_COLLECTION must be set.");
 
     let mut client_options = ClientOptions::parse(mongodb_uri).await?;
     client_options.app_name = Some(database_name.to_string());
@@ -62,6 +66,8 @@ impl DB {
       database.collection::<Document>(freelancers_collection_name.as_str());
     let proposals_collection_model = database.collection(proposals_collection_name.as_str());
     let proposals_collection = database.collection::<Document>(proposals_collection_name.as_str());
+    let deals_collection_model = database.collection(deals_collection_name.as_str());
+    let deals_collection = database.collection::<Document>(deals_collection_name.as_str());
 
     println!("✅ Database connected successfully");
 
@@ -74,6 +80,8 @@ impl DB {
       freelancer_collection,
       proposals_collection_model,
       proposals_collection,
+      deals_collection_model,
+      deals_collection,
     })
   }
 
@@ -378,17 +386,13 @@ impl DB {
       .await
       .map_err(MongoQueryError)?
     {
-      let proposal = doc_to_proposal_response(&doc)?;
-
-      let proposal_price = proposal.price.clone();
-      let freelancer_id = proposal.freelancer_id.clone();
-      let task_id = proposal.task_id.clone();
-      let deal_response = self.add_deal(&proposal_id).await?;
-
+      let (proposal, partial_deal) = doc_to_proposal_and_deal_response(&doc)?;
       let proposal_response = SingleProposalResponse {
         status: "Success",
         data: ProposalData { proposal },
       };
+
+      //let deal_responde = self.add_deal(&partial_deal).await?;
 
       Ok(proposal_response)
     } else {
@@ -396,23 +400,17 @@ impl DB {
     }
   }
 
-  pub async fn add_deal(&self, proposal_id: &String) -> Result<SingleDealResponse> {
-    let task_id = "1";
-    let freelancer_id = "1";
-    let status = "pending";
-    let address = "0x0";
-    let document = build_user_document(body, description, role.to_owned())?;
+  pub async fn add_deal(&self, partial_deal: &DealResponse) -> Result<SingleDealResponse> {
+    let _id = self
+      .deals_collection
+      .count_documents(None, None)
+      .await
+      .map_err(MongoQueryError)?
+      + 1;
+    let _id = _id.to_string();
+    let proposal_id = &partial_deal.id;
 
-    let options = IndexOptions::builder().unique(true).build();
-    let index = IndexModel::builder()
-      .keys(doc! {"user_name": 1})
-      .options(options)
-      .build();
-
-    match self.client_collection_model.create_index(index, None).await {
-      Ok(_) => {}
-      Err(e) => return Err(MongoQueryError(e)),
-    };
+    let document = build_deal_document(_id.to_string(), &proposal_id)?;
 
     let insert_result = match self.client_collection.insert_one(&document, None).await {
       Ok(result) => result,
@@ -432,8 +430,8 @@ impl DB {
       .as_str()
       .expect("issue with new _id");
 
-    let client_model = match self
-      .client_collection_model
+    let deal_model = match self
+      .deals_collection_model
       .find_one(doc! {"_id": new_id}, None)
       .await
     {
@@ -441,12 +439,11 @@ impl DB {
       Ok(None) => return Err(NotFoundError(new_id.to_string())),
       Err(e) => return Err(MongoQueryError(e)),
     };
+    let deal = docs_to_deal_response(&deal_model, partial_deal)?;
 
-    let client = doc_to_user_response(&client_model)?;
-
-    Ok(SingleUserResponse {
+    Ok(SingleDealResponse {
       status: "Success",
-      data: UserData { user: client },
+      data: DealData { deal },
     })
   }
 }

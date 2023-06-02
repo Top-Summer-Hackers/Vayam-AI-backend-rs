@@ -9,7 +9,7 @@ pub struct UserModel {
   pub user_name: String,
   pub description: Option<String>,
   pub password: String,
-  pub tasks: Option<Vec<ObjectId>>,
+  pub tasks_id: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -23,14 +23,14 @@ pub struct TaskModel {
   //#[validate(length(max = 5))]
   pub skills: Vec<String>,
   pub bounty: u16,
-  pub proposals: Option<Vec<ObjectId>>,
+  pub proposals: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProposalModel {
   #[serde(rename = "_id")]
   pub id: String,
-  pub task_id: ObjectId,
+  pub task_id: String,
   pub freelancer_id: String,
   pub milestones: Vec<MilestoneModel>,
   //pub price: usize,
@@ -46,9 +46,9 @@ pub struct MilestoneModel {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Deal {
+pub struct DealModel {
   #[serde(rename = "_id")]
-  pub id: String,
+  pub _id: String,
   //  pub task_id: String,
   pub proposal_id: String,
   // pub freelancer_id: String,
