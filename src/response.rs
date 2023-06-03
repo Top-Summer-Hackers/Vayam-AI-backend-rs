@@ -90,6 +90,11 @@ pub struct ProposalDealData {
 }
 
 #[derive(Serialize, Debug)]
+pub struct DealData {
+  pub deal: DealResponse,
+}
+
+#[derive(Serialize, Debug)]
 pub struct SingleUserResponse {
   pub status: &'static str,
   pub data: UserData,
@@ -123,7 +128,11 @@ pub struct SingleProposalDealResponse {
   pub status: &'static str,
   pub data: ProposalDealData,
 }
-
+#[derive(Serialize, Debug)]
+pub struct SingleDealResponse {
+  pub status: &'static str,
+  pub data: DealData,
+}
 #[derive(Serialize, Debug)]
 pub struct TaskListResponse {
   pub status: &'static str,

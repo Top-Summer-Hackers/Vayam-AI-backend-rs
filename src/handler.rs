@@ -137,3 +137,18 @@ pub async fn list_deals_handler(
     Err(e) => Err(e.into()),
   }
 }
+
+pub async fn update_deal_handler(
+  Path((deal_id, proposal_id)): Path<(String, String)>,
+  State(app_state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state
+    .db
+    .update_deal(&deal_id, &proposal_id)
+    .await
+    .map_err(MyError::from)
+  {
+    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
+    Err(e) => Err(e.into()),
+  }
+}

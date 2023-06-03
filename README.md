@@ -50,6 +50,10 @@ Fetch all the deals:
 
 `curl http://localhost:8080/api/deals`
 
+Update deal address:
+
+`curl -X PATCH http://localhost:8080/api/deal/{deal_id}/{transacction_id}`
+
 Fetch all the freelancers:
 
 `curl http://localhost:8080/api/freelancer`

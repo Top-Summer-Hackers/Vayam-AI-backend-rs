@@ -1,10 +1,10 @@
 use crate::error::MyError;
 use crate::model::{DealModel, ProposalModel, TaskModel};
 use crate::response::{
-  DealListResponse, DealResponse, PartialDealResponse, ProposalData, ProposalDealData,
-  ProposalListResponse, ProposalResponse, SingleProposalDealResponse, SingleProposalResponse,
-  SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData,
-  UserResponse, UsersListResponse,
+  DealData, DealListResponse, DealResponse, PartialDealResponse, ProposalData, ProposalDealData,
+  ProposalListResponse, ProposalResponse, SingleDealResponse, SingleProposalDealResponse,
+  SingleProposalResponse, SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse,
+  TaskResponse, UserData, UserResponse, UsersListResponse,
 };
 use crate::schema::{CreateProposalSchema, CreateTaskSchema};
 use crate::utils::{
@@ -474,5 +474,34 @@ impl DB {
       results: json_result.len(),
       deals: json_result,
     })
+  }
+
+  pub async fn update_deal(
+    &self,
+    deal_id: &String,
+    transaccion_id: &String,
+  ) -> Result<SingleDealResponse> {
+    let filter = doc! {"_id": deal_id};
+    let update = doc! {"$set": {"address": transaccion_id}};
+
+    let options = FindOneAndUpdateOptions::builder()
+      .return_document(ReturnDocument::After)
+      .build();
+
+    if let Some(doc) = self
+      .deals_collection_model
+      .find_one_and_update(filter, update, options)
+      .await
+      .map_err(MongoQueryError)?
+    {
+      let deal = doc_to_deal_response(&doc)?;
+      let proposal_response = SingleDealResponse {
+        status: "Success",
+        data: DealData { deal },
+      };
+      Ok(proposal_response)
+    } else {
+      Err(NotFoundError(deal_id.to_string()))
+    }
   }
 }
