@@ -8,6 +8,7 @@ pub struct UserResponse {
   pub description: String,
   pub password: String,
   pub tasks: Vec<String>,
+  pub skills: Vec<String>,
 }
 
 #[derive(Serialize, Debug)]

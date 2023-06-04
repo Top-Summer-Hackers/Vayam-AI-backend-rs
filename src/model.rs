@@ -10,6 +10,13 @@ pub struct UserModel {
   pub description: Option<String>,
   pub password: String,
   pub tasks: Option<Vec<ObjectId>>,
+  #[serde(flatten)]
+  pub freelancer: Freelancer,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Freelancer {
+  pub skills: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

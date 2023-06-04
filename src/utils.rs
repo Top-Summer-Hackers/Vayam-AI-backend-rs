@@ -37,6 +37,7 @@ pub fn doc_to_user_response(user: &UserModel) -> Result<UserResponse> {
     description: user.description.to_owned().unwrap(),
     password: user.password.to_owned(),
     tasks: map_object_id_to_string(user.tasks.to_owned()),
+    skills: user.freelancer.skills.to_owned(),
   };
 
   Ok(user_response)
