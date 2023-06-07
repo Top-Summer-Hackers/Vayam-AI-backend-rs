@@ -39,7 +39,7 @@ pub fn doc_to_user_response(user: &UserModel) -> Result<UserResponse> {
     tasks: map_object_id_to_string(user.tasks.to_owned()),
     skills: user.freelancer.skills.to_owned(),
   };
-
+  println!("{:?}", user_response);
   Ok(user_response)
 }
 

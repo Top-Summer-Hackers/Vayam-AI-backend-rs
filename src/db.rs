@@ -241,6 +241,7 @@ impl DB {
   }
 
   pub async fn fetch_freelancers(&self) -> Result<UsersListResponse> {
+    println!("debug");
     let mut cursor = self
       .freelancer_collection_model
       .find(None, None)
@@ -249,7 +250,8 @@ impl DB {
 
     let mut json_result: Vec<UserResponse> = Vec::new();
     while let Some(doc) = cursor.next().await {
-      json_result.push(doc_to_user_response(&doc.unwrap())?);
+      println!("{:?}", &doc);
+      // json_result.push(doc_to_user_response(&doc.unwrap())?);
     }
 
     Ok(UsersListResponse {

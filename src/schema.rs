@@ -16,7 +16,7 @@ pub struct CreateUserSchema {
   // #[serde(skip_serializing_if = "Option::is_none")]
   // pub tasks: Option<Vec<String>>,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub freelancer: Option<Vec<Freelancer>>,
+  pub freelancer: Option<Freelancer>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
