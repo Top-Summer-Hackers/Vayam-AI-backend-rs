@@ -1,16 +1,18 @@
 use crate::error::MyError;
-use crate::model::{DealModel, ProposalModel, TaskModel};
+use crate::model::{DealModel, ProposalModel, ReviewModel, TaskModel};
 use crate::response::{
   DealData, DealListResponse, DealResponse, PartialDealResponse, ProposalData, ProposalDealData,
-  ProposalListResponse, ProposalResponse, SingleDealResponse, SingleProposalDealResponse,
-  SingleProposalResponse, SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse,
-  TaskResponse, UserData, UserResponse, UsersListResponse,
+  ProposalListResponse, ProposalResponse, ReviewData, SingleDealResponse,
+  SingleProposalDealResponse, SingleProposalResponse, SingleReviewResponse, SingleTaskResponse,
+  SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData, UserResponse,
+  UsersListResponse,
 };
-use crate::schema::{CreateProposalSchema, CreateTaskSchema};
+use crate::schema::{CreateProposalSchema, CreateReviewSchema, CreateTaskSchema};
 use crate::utils::{
-  build_deal_document, build_proposal_document, build_task_document, build_user_document,
-  doc_to_deal_response, doc_to_proposal_and_deal_response, doc_to_proposal_response,
-  doc_to_task_response, doc_to_user_response, docs_to_deal_response,
+  build_deal_document, build_proposal_document, build_review_document, build_task_document,
+  build_user_document, doc_to_deal_response, doc_to_proposal_and_deal_response,
+  doc_to_proposal_response, doc_to_review_response, doc_to_task_response, doc_to_user_response,
+  docs_to_deal_response,
 };
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
@@ -26,6 +28,8 @@ pub struct DB {
   pub tasks_collection: Collection<Document>,
   pub freelancer_collection_model: Collection<UserModel>,
   pub freelancer_collection: Collection<Document>,
+  pub review_collection_model: Collection<ReviewModel>,
+  pub review_collection: Collection<Document>,
   pub proposals_collection_model: Collection<ProposalModel>,
   pub proposals_collection: Collection<Document>,
   pub deals_collection_model: Collection<DealModel>,
@@ -45,6 +49,8 @@ impl DB {
       std::env::var("MONGODB_TASKS_COLLECTION").expect("MONGODB_TASKS_COLLECTION must be set.");
     let freelancers_collection_name = std::env::var("MONGODB_FREELANCERS_COLLECTION")
       .expect("MONGODB_FREELANCERS_COLLECTION must be set.");
+    let review_collection_name =
+      std::env::var("MONGODB_REVIEW_COLLECTION").expect("MONGODB_REVIEW_COLLECTION must be set.");
     let proposals_collection_name = std::env::var("MONGODB_PROPOSALS_COLLECTION")
       .expect("MONGODB_PROPOSALS_COLLECTION must be set.");
     let deals_collection_name =
@@ -63,6 +69,8 @@ impl DB {
     let freelancer_collection_model = database.collection(freelancers_collection_name.as_str());
     let freelancer_collection =
       database.collection::<Document>(freelancers_collection_name.as_str());
+    let review_collection_model = database.collection(review_collection_name.as_str());
+    let review_collection = database.collection::<Document>(review_collection_name.as_str());
     let proposals_collection_model = database.collection(proposals_collection_name.as_str());
     let proposals_collection = database.collection::<Document>(proposals_collection_name.as_str());
     let deals_collection_model = database.collection(deals_collection_name.as_str());
@@ -77,6 +85,8 @@ impl DB {
       tasks_collection,
       freelancer_collection_model,
       freelancer_collection,
+      review_collection_model,
+      review_collection,
       proposals_collection_model,
       proposals_collection,
       deals_collection_model,
@@ -200,7 +210,7 @@ impl DB {
       .await
       .map_err(MongoQueryError)?
       + 1;
-    let document = build_task_document(body, _id.to_string())?;
+    let document: Document = build_task_document(body, _id.to_string())?;
 
     let options = IndexOptions::builder().unique(true).build();
     let index = IndexModel::builder()
@@ -321,6 +331,61 @@ impl DB {
     Ok(SingleUserResponse {
       status: "Success",
       data: UserData { user },
+    })
+  }
+
+  pub async fn add_review(&self, body: &CreateReviewSchema) -> Result<SingleReviewResponse> {
+    let _id = self
+      .review_collection
+      .count_documents(None, None)
+      .await
+      .map_err(MongoQueryError)?
+      + 1;
+    let document: Document = build_review_document(body, _id.to_string())?;
+    let options = IndexOptions::builder().unique(true).build();
+    let index = IndexModel::builder()
+      .keys(doc! {"review": 1})
+      .options(options)
+      .build();
+
+    match self.review_collection_model.create_index(index, None).await {
+      Ok(_) => {}
+      Err(e) => return Err(MongoQueryError(e)),
+    };
+
+    let insert_result = match self.review_collection.insert_one(&document, None).await {
+      Ok(result) => result,
+      Err(e) => {
+        if e
+          .to_string()
+          .contains("E11000 duplicate key error collection")
+        {
+          return Err(MongoDuplicateError(e));
+        }
+        return Err(MongoQueryError(e));
+      }
+    };
+
+    let new_id = insert_result
+      .inserted_id
+      .as_str()
+      .expect("issue with new _id");
+
+    let review_model = match self
+      .review_collection_model
+      .find_one(doc! {"_id": new_id}, None)
+      .await
+    {
+      Ok(Some(doc)) => doc,
+      Ok(None) => return Err(NotFoundError(new_id.to_string())),
+      Err(e) => return Err(MongoQueryError(e)),
+    };
+
+    let review = doc_to_review_response(&review_model)?;
+
+    Ok(SingleReviewResponse {
+      status: "Success",
+      data: ReviewData { review },
     })
   }
 

@@ -52,3 +52,10 @@ pub struct CreateMilestoneSchema {
   pub deadline: String,
   pub price: usize,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreateReviewSchema {
+  pub freelancer_id: String,
+  pub review: String,
+  pub star: u16,
+}

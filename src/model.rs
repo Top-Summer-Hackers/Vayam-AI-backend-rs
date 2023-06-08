@@ -58,3 +58,12 @@ pub struct DealModel {
   pub status: String,
   pub address: String,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReviewModel {
+  #[serde(rename = "_id")]
+  pub id: String,
+  pub freelancer_id: String,
+  pub review: String,
+  pub star: u16,
+}
