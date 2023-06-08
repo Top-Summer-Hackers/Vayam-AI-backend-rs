@@ -9,7 +9,7 @@ use axum::{
 
 use crate::{
   error::MyError,
-  schema::{CreateProposalSchema, CreateTaskSchema, CreateUserSchema},
+  schema::{CreateProposalSchema, CreateReviewSchema, CreateTaskSchema, CreateUserSchema},
   AppState,
 };
 
@@ -85,6 +85,16 @@ pub async fn add_freelancer_handler(
     .await
     .map_err(MyError::from)
   {
+    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
+    Err(e) => Err(e.into()),
+  }
+}
+
+pub async fn add_review_handler(
+  State(app_state): State<Arc<AppState>>,
+  Json(body): Json<CreateReviewSchema>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state.db.add_review(&body).await.map_err(MyError::from) {
     Ok(res) => Ok((StatusCode::CREATED, Json(res))),
     Err(e) => Err(e.into()),
   }

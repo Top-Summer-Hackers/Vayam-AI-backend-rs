@@ -1,11 +1,13 @@
 use crate::db::Result;
 use crate::error::MyError::MongoSerializeBsonError;
-use crate::model::{DealModel, MilestoneModel, ProposalModel, TaskModel};
+use crate::model::{DealModel, MilestoneModel, ProposalModel, ReviewModel, TaskModel};
 use crate::response::{
-  DealResponse, MilestoneResponse, PartialDealResponse, ProposalResponse, TaskResponse,
+  DealResponse, MilestoneResponse, PartialDealResponse, ProposalResponse, ReviewResponse,
+  TaskResponse,
 };
 use crate::schema::{
-  CreateBasicProposalSchema, CreateMilestoneSchema, CreateProposalSchema, CreateTaskSchema,
+  CreateBasicProposalSchema, CreateMilestoneSchema, CreateProposalSchema, CreateReviewSchema,
+  CreateTaskSchema,
 };
 use crate::{model::UserModel, response::UserResponse, schema::CreateUserSchema};
 use mongodb::bson::{self, doc, Document};
@@ -203,4 +205,22 @@ pub fn doc_to_milestone_response(milestone: &MilestoneModel) -> MilestoneRespons
     status: milestone.status.to_owned(),
   };
   milestone_response
+}
+
+pub fn build_review_document(body: &CreateReviewSchema, _id: String) -> Result<bson::Document> {
+  let serialized_data = bson::to_bson(body).map_err(MongoSerializeBsonError)?;
+  let document = serialized_data.as_document().unwrap();
+  let mut doc_with_id = doc! {"_id": _id};
+  doc_with_id.extend(document.clone());
+  Ok(doc_with_id)
+}
+
+pub fn doc_to_review_response(review: &ReviewModel) -> Result<ReviewResponse> {
+  let review_response = ReviewResponse {
+    id: review.id.to_owned(),
+    freelancer_id: review.freelancer_id.to_owned(),
+    star: review.star.to_owned(),
+    review: review.review.to_owned(),
+  };
+  Ok(review_response)
 }

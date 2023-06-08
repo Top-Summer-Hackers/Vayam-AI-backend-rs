@@ -158,3 +158,22 @@ pub struct DealListResponse {
   pub results: usize,
   pub deals: Vec<DealResponse>,
 }
+
+#[derive(Serialize, Debug)]
+pub struct ReviewResponse {
+  pub id: String,
+  pub freelancer_id: String,
+  pub review: String,
+  pub star: u16,
+}
+
+#[derive(Serialize, Debug)]
+pub struct ReviewData {
+  pub review: ReviewResponse,
+}
+
+#[derive(Serialize, Debug)]
+pub struct SingleReviewResponse {
+  pub status: &'static str,
+  pub data: ReviewData,
+}
