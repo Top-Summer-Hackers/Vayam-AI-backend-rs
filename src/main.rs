@@ -37,7 +37,7 @@ async fn main() -> Result<(), MyError> {
 
   let app = create_router(Arc::new(AppState { db: db.clone() })).layer(cors);
 
-  let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
+  let addr = SocketAddr::from(([0, 0, 0, 0], 8090));
   println!("✅ Server listening on {addr}\n");
   axum::Server::bind(&addr)
     .serve(app.into_make_service())
