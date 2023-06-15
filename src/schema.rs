@@ -56,6 +56,8 @@ pub struct CreateMilestoneSchema {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateReviewSchema {
   pub freelancer_id: String,
+  pub client_id: String,
+  pub deal_id: String,
   pub review: String,
-  pub star: u16,
+  pub stars: u16,
 }

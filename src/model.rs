@@ -64,6 +64,8 @@ pub struct ReviewModel {
   #[serde(rename = "_id")]
   pub id: String,
   pub freelancer_id: String,
+  pub client_id: String,
+  pub deal_id: String,
   pub review: String,
-  pub star: u16,
+  pub stars: u16,
 }

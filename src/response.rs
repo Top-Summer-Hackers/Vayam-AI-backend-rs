@@ -162,9 +162,11 @@ pub struct DealListResponse {
 #[derive(Serialize, Debug)]
 pub struct ReviewResponse {
   pub id: String,
+  pub client_id: String,
+  pub deal_id: String,
   pub freelancer_id: String,
   pub review: String,
-  pub star: u16,
+  pub stars: u16,
 }
 
 #[derive(Serialize, Debug)]

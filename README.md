@@ -48,11 +48,21 @@ Approve a proposal:
 
 Fetch all the deals:
 
-`curl http://localhost:8080/api/deals`
+`curl http://localhost:8080/api/deal`
 
 Update deal address:
 
 `curl -X PATCH http://localhost:8080/api/deal/{deal_id}/{transacction_id}`
+
+Client submit deal review:
+
+`curl --request POST --url http://0.0.0.0:8080/api/review --header 'Content-Type: application/json' --data '{
+	"freelancer_id": "0x545649879823432",
+	"client_id": "0x418564867486324",
+	"deal_id": "1",
+	"review": "Good",
+	"stars": 4
+}'`
 
 Fetch all the freelancers:
 

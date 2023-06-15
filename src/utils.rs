@@ -219,7 +219,9 @@ pub fn doc_to_review_response(review: &ReviewModel) -> Result<ReviewResponse> {
   let review_response = ReviewResponse {
     id: review.id.to_owned(),
     freelancer_id: review.freelancer_id.to_owned(),
-    star: review.star.to_owned(),
+    client_id: review.client_id.to_owned(),
+    deal_id: review.deal_id.to_owned(),
+    stars: review.stars.to_owned(),
     review: review.review.to_owned(),
   };
   Ok(review_response)
