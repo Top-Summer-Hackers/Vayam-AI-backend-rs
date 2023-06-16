@@ -17,7 +17,11 @@ pub enum MyError {
   MongoDataError(#[from] mongodb::bson::document::ValueAccessError),
   #[error("invalid ID: {0}")]
   InvalidIDError(String),
-  #[error("Note with ID: {0} not found")]
+  #[error("invalid password")]
+  InvalidPasswordError,
+  #[error("invalid role")]
+  InvalidRoleError,
+  #[error("User with user_name: {0} not found")]
   NotFoundError(String),
 }
 
@@ -49,6 +53,13 @@ impl Into<(axum::http::StatusCode, Json<serde_json::Value>)> for MyError {
         ErrorResponse {
           status: "Fail",
           message: format!("invalid id: {}", id),
+        },
+      ),
+      MyError::InvalidPasswordError => (
+        StatusCode::BAD_REQUEST,
+        ErrorResponse {
+          status: "Fail",
+          message: "invalid password".to_string(),
         },
       ),
       MyError::NotFoundError(id) => (
@@ -84,6 +95,13 @@ impl Into<(axum::http::StatusCode, Json<serde_json::Value>)> for MyError {
         ErrorResponse {
           status: "Error",
           message: format!("MongoDB error: {}", e),
+        },
+      ),
+      MyError::InvalidRoleError => (
+        StatusCode::BAD_REQUEST,
+        ErrorResponse {
+          status: "Fail",
+          message: "invalid role".to_string(),
         },
       ),
     };

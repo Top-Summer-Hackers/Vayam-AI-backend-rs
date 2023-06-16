@@ -7,7 +7,7 @@ use crate::response::{
   SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData, UserResponse,
   UsersListResponse,
 };
-use crate::schema::{CreateProposalSchema, CreateReviewSchema, CreateTaskSchema};
+use crate::schema::{CreateProposalSchema, CreateReviewSchema, CreateTaskSchema, LoginUserSchema};
 use crate::utils::{
   build_deal_document, build_proposal_document, build_review_document, build_task_document,
   build_user_document, doc_to_deal_response, doc_to_proposal_and_deal_response,
@@ -92,6 +92,57 @@ impl DB {
       deals_collection_model,
       deals_collection,
     })
+  }
+
+  pub async fn api_login(&self, body: &LoginUserSchema) -> Result<SingleUserResponse> {
+    let role = body.role.to_owned();
+    if role == "client" {
+      let user_model = match self
+        .client_collection_model
+        .find_one(doc! {"user_name": body.user_name.to_owned()}, None)
+        .await
+      {
+        Ok(user) => user,
+        Err(e) => return Err(MongoQueryError(e)),
+      };
+      match user_model {
+        Some(user) => {
+          let user = doc_to_user_response(&user)?;
+          if user.password == body.password {
+            return Ok(SingleUserResponse {
+              status: "Success",
+              data: UserData { user },
+            });
+          }
+          return Err(InvalidPasswordError);
+        }
+        None => return Err(NotFoundError(body.user_name.to_owned())),
+      };
+    } else if role == "freelancer" {
+      let user = match self
+        .freelancer_collection_model
+        .find_one(doc! {"user_name": body.user_name.to_owned()}, None)
+        .await
+      {
+        Ok(user) => user,
+        Err(e) => return Err(MongoQueryError(e)),
+      };
+      match user {
+        Some(user) => {
+          let user = doc_to_user_response(&user)?;
+          if user.password == body.password {
+            return Ok(SingleUserResponse {
+              status: "Success",
+              data: UserData { user },
+            });
+          }
+          return Err(InvalidPasswordError);
+        }
+        None => return Err(NotFoundError(body.user_name.to_owned())),
+      };
+    } else {
+      return Err(InvalidRoleError);
+    }
   }
 
   pub async fn fetch_clients(&self) -> Result<UsersListResponse> {

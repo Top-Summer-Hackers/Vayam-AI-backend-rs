@@ -9,9 +9,21 @@ use axum::{
 
 use crate::{
   error::MyError,
-  schema::{CreateProposalSchema, CreateReviewSchema, CreateTaskSchema, CreateUserSchema},
+  schema::{
+    CreateProposalSchema, CreateReviewSchema, CreateTaskSchema, CreateUserSchema, LoginUserSchema,
+  },
   AppState,
 };
+
+pub async fn api_login_handler(
+  State(app_state): State<Arc<AppState>>,
+  Json(body): Json<LoginUserSchema>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state.db.api_login(&body).await.map_err(MyError::from) {
+    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
+    Err(e) => Err(e.into()),
+  }
+}
 
 pub async fn list_clients_handler(
   State(app_state): State<Arc<AppState>>,

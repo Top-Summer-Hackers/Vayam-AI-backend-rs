@@ -3,9 +3,9 @@ mod error;
 mod handler;
 mod model;
 mod response;
-mod route;
 mod schema;
 mod utils;
+mod web;
 
 use std::{net::SocketAddr, sync::Arc};
 
@@ -16,8 +16,8 @@ use axum::http::{
 use db::DB;
 use dotenv::dotenv;
 use error::MyError;
-use route::create_router;
 use tower_http::cors::CorsLayer;
+use web::route::create_router;
 
 pub struct AppState {
   db: DB,
