@@ -1,3 +1,4 @@
+use crate::web::mw_auth::mw_require_auth;
 use crate::{
   handler::{
     add_client_handler, add_freelancer_handler, add_review_handler, api_login_handler,
@@ -8,6 +9,7 @@ use crate::{
   AppState,
 };
 use axum::{
+  middleware,
   routing::{get, patch, post},
   Router,
 };
@@ -16,6 +18,7 @@ use std::sync::Arc;
 pub fn create_router(app_state: Arc<AppState>) -> Router {
   Router::new()
     .route("/api/login", post(api_login_handler))
+    //.route_layer(middleware::from_fn(mw_require_auth))
     .route(
       "/api/client", //provider, employee
       post(add_client_handler).get(list_clients_handler),

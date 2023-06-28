@@ -14,12 +14,15 @@ use crate::utils::{
   doc_to_proposal_response, doc_to_review_response, doc_to_task_response, doc_to_user_response,
   docs_to_deal_response,
 };
+use crate::web;
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
 use futures::StreamExt;
 use mongodb::bson::{doc, Document};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Collection, IndexModel};
+
+use tower_cookies::{Cookie, Cookies};
 #[derive(Clone, Debug)]
 pub struct DB {
   pub client_collection_model: Collection<UserModel>,
@@ -94,7 +97,11 @@ impl DB {
     })
   }
 
-  pub async fn api_login(&self, body: &LoginUserSchema) -> Result<SingleUserResponse> {
+  pub async fn api_login(
+    &self,
+    //cookies: Cookies,
+    body: &LoginUserSchema,
+  ) -> Result<SingleUserResponse> {
     let role = body.role.to_owned();
     if role == "client" {
       let user_model = match self
@@ -109,15 +116,17 @@ impl DB {
         Some(user) => {
           let user = doc_to_user_response(&user)?;
           if user.password == body.password {
+            // FIXME: Implement real auth-token generation/signature.
+            //cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
             return Ok(SingleUserResponse {
               status: "Success",
               data: UserData { user },
             });
           }
-          return Err(InvalidPasswordError);
+          Err(InvalidPasswordError)
         }
-        None => return Err(NotFoundError(body.user_name.to_owned())),
-      };
+        None => Err(NotFoundError(body.user_name.to_owned())),
+      }
     } else if role == "freelancer" {
       let user = match self
         .freelancer_collection_model

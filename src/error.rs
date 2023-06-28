@@ -23,6 +23,8 @@ pub enum MyError {
   InvalidRoleError,
   #[error("User with user_name: {0} not found")]
   NotFoundError(String),
+  #[error("Auth fail: no auth token cookie")]
+  AuthFailNoAuthTokenCookie,
 }
 
 #[derive(Serialize)]
@@ -102,6 +104,13 @@ impl Into<(axum::http::StatusCode, Json<serde_json::Value>)> for MyError {
         ErrorResponse {
           status: "Fail",
           message: "invalid role".to_string(),
+        },
+      ),
+      MyError::AuthFailNoAuthTokenCookie => (
+        StatusCode::UNAUTHORIZED,
+        ErrorResponse {
+          status: "Fail",
+          message: "no auth token cookie".to_string(),
         },
       ),
     };

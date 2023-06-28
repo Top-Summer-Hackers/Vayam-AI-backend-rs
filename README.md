@@ -22,6 +22,36 @@ Submit a new client(provider or employee):
 
 `curl -X POST http://localhost:8080/api/client -d '{"_id": "0x546847854","user_name":"Scroll","description":"zk","password":"123"}' -H "content-type: application/json"`
 
+Verify user(clients) credentials(login)
+
+`curl --request POST \
+ --url http://0.0.0.0:8080/api/login \
+ --header 'Content-Type: application/json' \
+ --data '{
+"user_name": "Scroll",
+"password": "123",
+"role": "client"
+}'`
+
+Fetch all the freelancers:
+
+`curl http://localhost:8080/api/freelancer`
+
+Submit a new freelancer:
+
+`curl -X POST http://localhost:8080/api/freelancer -d '{"_id": "0x001546847854","user_name":"Medhi",	"description":"Auditor","password":"123"}' -H "content-type: application/json"`
+
+Verify user(freelancer) credentials(login)
+
+`curl --request POST \
+  --url http://0.0.0.0:8080/api/login \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "user_name": "Medhi",
+    "password": "123",
+		"role": "freelancer"
+}'`
+
 Fetch all the tasks:
 
 `curl http://localhost:8080/api/task`
@@ -63,11 +93,3 @@ Client submit deal review:
 	"review": "Good",
 	"stars": 4
 }'`
-
-Fetch all the freelancers:
-
-`curl http://localhost:8080/api/freelancer`
-
-Submit a new freelancer:
-
-`curl -X POST http://localhost:8080/api/freelancer -d '{"_id": "0x001546847854","user_name":"Medhi",	"description":"Auditor","password":"123"}' -H "content-type: application/json"`
