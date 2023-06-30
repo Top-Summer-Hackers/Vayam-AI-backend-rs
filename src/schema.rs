@@ -41,20 +41,24 @@ pub struct CreateProposalSchema {
   pub client_id: String,
   pub task_id: String,
   pub freelancer_id: String,
-  pub milestones: Vec<CreateMilestoneSchema>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub milestones_id: Option<Vec<String>>,
   //pub price: u16,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CreateBasicProposalSchema {
-  pub client_id: String,
-  pub task_id: String,
-  pub freelancer_id: String,
-  //pub price: u16,
-}
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct CreateBasicProposalSchema {
+//   pub client_id: String,
+//   pub task_id: String,
+//   pub freelancer_id: String,
+//   //pub price: u16,
+//   #[serde(skip_serializing_if = "Option::is_none")]
+//   pub milestones_id: Option<Vec<String>>,
+// }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateMilestoneSchema {
+  pub proposal_id: String,
   pub description: String,
   pub deadline: String,
   pub price: usize,

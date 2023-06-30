@@ -10,7 +10,8 @@ use axum::{
 use crate::{
   error::MyError,
   schema::{
-    CreateProposalSchema, CreateReviewSchema, CreateTaskSchema, CreateUserSchema, LoginUserSchema,
+    CreateMilestoneSchema, CreateProposalSchema, CreateReviewSchema, CreateTaskSchema,
+    CreateUserSchema, LoginUserSchema,
   },
   AppState,
 };
@@ -121,6 +122,14 @@ pub async fn list_proposal_handler(
   }
 }
 
+pub async fn list_milestone_handler(
+  State(app_state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state.db.fetch_milestones().await.map_err(MyError::from) {
+    Ok(res) => Ok(Json(res)),
+    Err(e) => Err(e.into()),
+  }
+}
 pub async fn submit_proposal_handler(
   State(app_state): State<Arc<AppState>>,
   Json(body): Json<CreateProposalSchema>,
@@ -136,6 +145,20 @@ pub async fn submit_proposal_handler(
   }
 }
 
+pub async fn add_milestones_handler(
+  State(app_state): State<Arc<AppState>>,
+  Json(body): Json<Vec<CreateMilestoneSchema>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state
+    .db
+    .add_milestones(&body)
+    .await
+    .map_err(MyError::from)
+  {
+    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
+    Err(e) => Err(e.into()),
+  }
+}
 pub async fn aprove_proposal_handler(
   Path(proposal_id): Path<String>,
   State(app_state): State<Arc<AppState>>,
@@ -167,6 +190,21 @@ pub async fn update_deal_handler(
   match app_state
     .db
     .update_deal(&deal_id, &proposal_id)
+    .await
+    .map_err(MyError::from)
+  {
+    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
+    Err(e) => Err(e.into()),
+  }
+}
+
+pub async fn submit_milestone_handler(
+  Path((proposal_id, milestone_id, link)): Path<(String, String, String)>,
+  State(app_state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state
+    .db
+    .submit_milestone(&proposal_id, &milestone_id, &link)
     .await
     .map_err(MyError::from)
   {

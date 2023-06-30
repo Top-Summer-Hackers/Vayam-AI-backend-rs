@@ -1,3 +1,4 @@
+use crate::handler::{add_milestones_handler, list_milestone_handler, submit_milestone_handler};
 use crate::web::mw_auth::mw_require_auth;
 use crate::{
   handler::{
@@ -33,6 +34,14 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
       post(submit_proposal_handler).get(list_proposal_handler),
     )
     .route("/api/proposal/:proposal_id", patch(aprove_proposal_handler))
+    .route(
+      "/api/milestone",
+      post(add_milestones_handler).get(list_milestone_handler),
+    )
+    .route(
+      "/api/milestone/:proposal_id/:milestone_id/:link",
+      patch(submit_milestone_handler),
+    )
     .route("/api/deal", get(list_deals_handler))
     .route(
       "/api/deal/:deal_id/:transacion_id",

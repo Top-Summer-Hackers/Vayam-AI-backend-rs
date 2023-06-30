@@ -33,16 +33,20 @@ pub struct ProposalModel {
   pub client_id: String,
   pub task_id: String,
   pub freelancer_id: String,
-  pub milestones: Vec<MilestoneModel>,
+  pub milestones_id: Option<Vec<String>>,
   //pub price: usize,
   pub accepted: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MilestoneModel {
+  #[serde(rename = "_id")]
+  pub id: String,
+  pub proposal_id: String,
   pub description: String,
   pub deadline: String,
   pub price: usize,
+  pub link: String,
   pub status: String,
 }
 

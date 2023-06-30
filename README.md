@@ -70,7 +70,42 @@ Fetch all the proposals:
 
 Submit a new proposal:
 
-`curl -X POST http://localhost:8080/api/proposal -d '{"client_id": "0x418564867486","task_id": "1","freelancer_id": "0x5456498798","milestones": [{"description": "Dataset collection ","deadline": "12-05-2023","price": 220},{"description": "Cleanning dataset","deadline": "12-06-2023","price": 50}]}' -H "content-type: application/json"`
+`curl --request POST \
+  --url http://localhost:8080/api/proposal \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"client_id": "0x41886",
+	"task_id": "8",
+	"freelancer_id": "0x54598798"
+}'`
+
+Fetch all the milestones:
+
+`curl http://localhost:8080/api/proposal`
+
+Add block of milestones:
+
+`curl --request POST \
+ --url http://localhost:8080/api/milestone \
+ --header 'Content-Type: application/json' \
+ --data ' [{
+"proposal_id": "1",
+"description": "Dataset collection",
+"deadline": "12-05-2023",
+"price": 20
+},
+{
+"proposal_id": "1",
+"description": "Data cleanning",
+"deadline": "12-05-2023",
+"price": 22
+},
+{
+"proposal_id": "1",
+"description": "Data analysis",
+"deadline": "12-05-2023",
+"price": 2280
+}]'`
 
 Approve a proposal:
 
@@ -79,6 +114,10 @@ Approve a proposal:
 Fetch all the deals:
 
 `curl http://localhost:8080/api/deal`
+
+Submit milestone(link)
+
+`curl x PATCH http://localhost:8080/api/milestone/{proposal_id}/{milestone_id}/{link}`
 
 Update deal address:
 
