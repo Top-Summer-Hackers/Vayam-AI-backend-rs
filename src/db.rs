@@ -547,7 +547,10 @@ impl DB {
     })
   }
 
-  pub async fn add_milestones(&self, body: &Vec<CreateMilestoneSchema>) -> Result<()> {
+  pub async fn add_milestones(
+    &self,
+    body: &Vec<CreateMilestoneSchema>,
+  ) -> Result<SingleProposalResponse> {
     let mil_id = self
       .milestones_collection
       .count_documents(None, None)
@@ -578,9 +581,29 @@ impl DB {
       .map(|id| id.1.as_str().expect("issue with new _id"))
       .collect::<Vec<&str>>();
 
-    //let milestones = doc_to_milestones_response(&milestones_model)?;
+    let proposal_id = body[0].proposal_id.clone();
+    let filter = doc! {"_id": &proposal_id};
+    let update = doc! {"$set": {"milestones_id": new_ids}};
 
-    Ok(())
+    let options = FindOneAndUpdateOptions::builder()
+      .return_document(ReturnDocument::After)
+      .build();
+
+    if let Some(doc) = self
+      .proposals_collection_model
+      .find_one_and_update(filter, update, options)
+      .await
+      .map_err(MongoQueryError)?
+    {
+      let proposal = doc_to_proposal_response(&doc)?;
+      let proposal_response = SingleProposalResponse {
+        status: "Success",
+        data: ProposalData { proposal },
+      };
+      Ok(proposal_response)
+    } else {
+      Err(NotFoundError(proposal_id.to_string()))
+    }
   }
   pub async fn aprove_proposal(&self, proposal_id: &String) -> Result<SingleProposalDealResponse> {
     let filter = doc! {"_id": proposal_id};
