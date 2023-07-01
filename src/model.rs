@@ -34,7 +34,7 @@ pub struct ProposalModel {
   pub task_id: String,
   pub freelancer_id: String,
   pub milestones_id: Option<Vec<String>>,
-  //pub price: usize,
+  pub proposal_price: f64,
   pub accepted: bool,
 }
 
@@ -45,7 +45,7 @@ pub struct MilestoneModel {
   pub proposal_id: String,
   pub description: String,
   pub deadline: String,
-  pub price: usize,
+  pub price: f64,
   pub link: String,
   pub status: String,
 }

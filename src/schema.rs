@@ -61,7 +61,7 @@ pub struct CreateMilestoneSchema {
   pub proposal_id: String,
   pub description: String,
   pub deadline: String,
-  pub price: usize,
+  pub price: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

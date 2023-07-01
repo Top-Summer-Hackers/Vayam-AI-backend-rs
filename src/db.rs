@@ -556,6 +556,7 @@ impl DB {
       .count_documents(None, None)
       .await
       .map_err(MongoQueryError)?;
+    let proposal_price = body.iter().fold(0.0, |acc, x| acc + x.price);
     let document = build_milestones_document(body, mil_id)?;
 
     let insert_result = match self
@@ -583,8 +584,7 @@ impl DB {
 
     let proposal_id = body[0].proposal_id.clone();
     let filter = doc! {"_id": &proposal_id};
-    let update = doc! {"$set": {"milestones_id": new_ids}};
-
+    let update = doc! {"$set": {"milestones_id": new_ids, "proposal_price": proposal_price}};
     let options = FindOneAndUpdateOptions::builder()
       .return_document(ReturnDocument::After)
       .build();

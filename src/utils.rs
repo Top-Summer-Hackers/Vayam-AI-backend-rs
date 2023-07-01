@@ -50,7 +50,7 @@ pub fn build_task_document(body: &CreateTaskSchema, _id: String) -> Result<bson:
 pub fn build_proposal_document(body: &CreateProposalSchema, _id: String) -> Result<Document> {
   let serialized_data = bson::to_bson(&body).map_err(MongoSerializeBsonError)?;
   let document = serialized_data.as_document().unwrap();
-  let mut doc_with_extras = doc! {"_id": _id, "accepted": false};
+  let mut doc_with_extras = doc! {"_id": _id, "accepted": false, "proposal_price": 0};
   doc_with_extras.extend(document.clone());
 
   Ok(doc_with_extras)
@@ -133,7 +133,7 @@ pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResp
     client_id: proposal.client_id.to_owned(),
     freelancer_id: proposal.freelancer_id.to_owned(),
     milestones_id,
-    price: 0,
+    proposal_price: proposal.proposal_price,
     accepted: proposal.accepted,
   };
   Ok(proposal_response)
@@ -163,7 +163,7 @@ pub fn doc_to_proposal_and_deal_response(
     task_id: proposal.task_id.to_owned(),
     freelancer_id: proposal.freelancer_id.to_owned(),
     milestones_id: proposal.milestones_id.to_owned().unwrap_or_else(Vec::new),
-    price: 1000,
+    proposal_price: proposal.proposal_price,
     accepted: proposal.accepted,
   };
 
