@@ -2,11 +2,11 @@ use crate::error::MyError;
 use crate::model::{DealModel, MilestoneModel, ProposalModel, ReviewModel, TaskModel};
 use crate::response::{
   DealData, DealListResponse, DealResponse, MilestoneData, MilestoneListResponse,
-  MilestoneResponse, PartialDealResponse, ProposalData, ProposalDealData, ProposalListResponse,
-  ProposalResponse, ReviewData, SingleDealResponse, SingleMilestoneResponse,
-  SingleProposalDealResponse, SingleProposalResponse, SingleReviewResponse, SingleTaskResponse,
-  SingleUserResponse, TaskData, TaskListResponse, TaskResponse, UserData, UserResponse,
-  UsersListResponse,
+  MilestoneResponse, PartialDealResponse, ProposalData, ProposalDealData, ProposalDetailedData,
+  ProposalListResponse, ProposalResponse, ReviewData, SingleDealResponse, SingleMilestoneResponse,
+  SingleProposalDealResponse, SingleProposalDetailedResponse, SingleProposalResponse,
+  SingleReviewResponse, SingleTaskResponse, SingleUserResponse, TaskData, TaskListResponse,
+  TaskResponse, UserData, UserResponse, UsersListResponse,
 };
 use crate::schema::{
   CreateMilestoneSchema, CreateProposalSchema, CreateReviewSchema, CreateTaskSchema,
@@ -15,9 +15,9 @@ use crate::schema::{
 use crate::utils::{
   build_deal_document, build_milestone_document, build_milestones_document,
   build_proposal_document, build_review_document, build_task_document, build_user_document,
-  doc_to_deal_response, doc_to_milestone_response, doc_to_proposal_and_deal_response,
-  doc_to_proposal_response, doc_to_review_response, doc_to_task_response, doc_to_user_response,
-  docs_to_deal_response,
+  doc_to_deal_response, doc_to_detailed_proposal_response, doc_to_milestone_response,
+  doc_to_proposal_and_deal_response, doc_to_proposal_response, doc_to_review_response,
+  doc_to_task_response, doc_to_user_response, docs_to_deal_response,
 };
 use crate::web;
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
@@ -277,6 +277,35 @@ impl DB {
     })
   }
 
+  pub async fn get_proposal(&self, proposal_id: &str) -> Result<SingleProposalDetailedResponse> {
+    let proposal = self
+      .proposals_collection_model
+      .find_one(doc! {"_id": proposal_id}, None)
+      .await
+      .map_err(MongoQueryError)?;
+
+    let mut cursor = self
+      .milestones_collection_model
+      .find(doc! {"proposal_id": proposal_id}, None)
+      .await
+      .map_err(MongoQueryError)?;
+
+    let mut milestones = Vec::new();
+    while let Some(doc) = cursor.next().await {
+      milestones.push(doc_to_milestone_response(&doc.unwrap())?);
+    }
+
+    match proposal {
+      Some(doc) => {
+        let detailed_proposal = doc_to_detailed_proposal_response(&doc, milestones)?;
+        Ok(SingleProposalDetailedResponse {
+          status: "Success",
+          data: ProposalDetailedData { detailed_proposal },
+        })
+      }
+      None => Err(NotFoundError(proposal_id.to_string())),
+    }
+  }
   pub async fn create_task(&self, body: &CreateTaskSchema) -> Result<SingleTaskResponse> {
     let _id = self
       .tasks_collection

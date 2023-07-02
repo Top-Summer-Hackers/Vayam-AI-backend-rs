@@ -45,6 +45,17 @@ pub struct ProposalResponse {
 }
 
 #[derive(Serialize, Debug)]
+pub struct ProposalDetailedResponse {
+  pub id: String,
+  pub client_id: String,
+  pub task_id: String,
+  pub freelancer_id: String,
+  pub milestones: Vec<MilestoneResponse>,
+  pub proposal_price: f64,
+  pub accepted: bool,
+}
+
+#[derive(Serialize, Debug)]
 pub struct DealResponse {
   pub id: String,
   pub task_id: String,
@@ -80,6 +91,11 @@ pub struct TaskData {
 #[derive(Serialize, Debug)]
 pub struct ProposalData {
   pub proposal: ProposalResponse,
+}
+
+#[derive(Serialize, Debug)]
+pub struct ProposalDetailedData {
+  pub detailed_proposal: ProposalDetailedResponse,
 }
 #[derive(Serialize, Debug)]
 pub struct MilestoneData {
@@ -120,6 +136,11 @@ pub struct SingleTaskResponse {
 pub struct SingleProposalResponse {
   pub status: &'static str,
   pub data: ProposalData,
+}
+#[derive(Serialize, Debug)]
+pub struct SingleProposalDetailedResponse {
+  pub status: &'static str,
+  pub data: ProposalDetailedData,
 }
 #[derive(Serialize, Debug)]
 pub struct SingleMilestoneResponse {

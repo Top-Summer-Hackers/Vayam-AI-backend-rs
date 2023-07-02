@@ -68,6 +68,10 @@ Fetch all the proposals:
 
 `curl http://localhost:8080/api/proposal`
 
+Get proposal by id:
+
+`curl http://localhost:8080/api/proposal/{proposal_id}`
+
 Submit a new proposal:
 
 `curl --request POST \
@@ -81,7 +85,7 @@ Submit a new proposal:
 
 Fetch all the milestones:
 
-`curl http://localhost:8080/api/proposal`
+`curl http://localhost:8080/api/milestone`
 
 Add block of milestones:
 

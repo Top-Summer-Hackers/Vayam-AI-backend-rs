@@ -2,8 +2,8 @@ use crate::db::Result;
 use crate::error::MyError::MongoSerializeBsonError;
 use crate::model::{DealModel, MilestoneModel, ProposalModel, ReviewModel, TaskModel};
 use crate::response::{
-  DealResponse, MilestoneResponse, PartialDealResponse, ProposalResponse, ReviewResponse,
-  TaskResponse,
+  DealResponse, MilestoneResponse, PartialDealResponse, ProposalDetailedResponse, ProposalResponse,
+  ReviewResponse, TaskResponse,
 };
 use crate::schema::{
   CreateMilestoneSchema, CreateProposalSchema, CreateReviewSchema, CreateTaskSchema,
@@ -125,7 +125,6 @@ pub fn doc_to_task_response(task: &TaskModel) -> Result<TaskResponse> {
 }
 
 pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResponse> {
-  //let (milestones, price) = milestone_model_to_response(&proposal.milestones);
   let milestones_id = proposal.milestones_id.to_owned().unwrap_or_else(Vec::new);
   let proposal_response = ProposalResponse {
     id: proposal.id.to_owned(),
@@ -133,6 +132,23 @@ pub fn doc_to_proposal_response(proposal: &ProposalModel) -> Result<ProposalResp
     client_id: proposal.client_id.to_owned(),
     freelancer_id: proposal.freelancer_id.to_owned(),
     milestones_id,
+    proposal_price: proposal.proposal_price,
+    accepted: proposal.accepted,
+  };
+  Ok(proposal_response)
+}
+
+pub fn doc_to_detailed_proposal_response(
+  proposal: &ProposalModel,
+  milestones: Vec<MilestoneResponse>,
+) -> Result<ProposalDetailedResponse> {
+  let milestones_id = proposal.milestones_id.to_owned().unwrap_or_else(Vec::new);
+  let proposal_response = ProposalDetailedResponse {
+    id: proposal.id.to_owned(),
+    task_id: proposal.task_id.to_owned(),
+    client_id: proposal.client_id.to_owned(),
+    freelancer_id: proposal.freelancer_id.to_owned(),
+    milestones,
     proposal_price: proposal.proposal_price,
     accepted: proposal.accepted,
   };

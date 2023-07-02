@@ -64,6 +64,20 @@ pub async fn get_task_handler(
   }
 }
 
+pub async fn get_proposal_handler(
+  Path(proposal_id): Path<String>,
+  State(app_state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match app_state
+    .db
+    .get_proposal(&proposal_id)
+    .await
+    .map_err(MyError::from)
+  {
+    Ok(res) => Ok(Json(res)),
+    Err(e) => Err(e.into()),
+  }
+}
 pub async fn create_task_handler(
   State(app_state): State<Arc<AppState>>,
   Json(body): Json<CreateTaskSchema>,
