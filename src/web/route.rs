@@ -11,6 +11,7 @@ use crate::{
   },
   AppState,
 };
+use axum::response::Response;
 use axum::{
   middleware,
   routing::{get, patch, post},
@@ -22,6 +23,7 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
   Router::new()
     .route("/api/login", post(api_login_handler))
     //.route_layer(middleware::from_fn(mw_require_auth))
+    .layer(middleware::map_response(main_response_mapper))
     .route(
       "/api/client", //provider, employee
       post(add_client_handler).get(list_clients_handler),
@@ -58,4 +60,10 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
     )
     .route("/api/review", post(add_review_handler))
     .with_state(app_state)
+}
+
+async fn main_response_mapper(res: Response) -> Response {
+  println!("--> {:<12} - main_response_mapper", "INFO");
+  println!();
+  res
 }

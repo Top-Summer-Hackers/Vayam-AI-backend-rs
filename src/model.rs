@@ -58,7 +58,7 @@ pub struct DealModel {
   pub proposal_id: String,
   pub freelancer_id: String,
   pub client_id: String,
-  pub price: usize,
+  pub price: f64,
   pub status: String,
   pub address: String,
 }

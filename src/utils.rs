@@ -188,7 +188,7 @@ pub fn doc_to_proposal_and_deal_response(
     proposal_id: proposal.id.to_owned(),
     freelancer_id: proposal.freelancer_id.to_owned(),
     client_id: proposal.client_id.to_owned(),
-    price: 1000,
+    price: proposal.proposal_price,
     status: "Initialized".to_string(),
     address: "0x0".to_string(),
   };
