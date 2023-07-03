@@ -18,12 +18,13 @@ use axum::{
   Router,
 };
 use std::sync::Arc;
+use tower_cookies::CookieManagerLayer;
 
 pub fn create_router(app_state: Arc<AppState>) -> Router {
   Router::new()
     .route("/api/login", post(api_login_handler))
-    //.route_layer(middleware::from_fn(mw_require_auth))
     .layer(middleware::map_response(main_response_mapper))
+    .layer(CookieManagerLayer::new())
     .route(
       "/api/client", //provider, employee
       post(add_client_handler).get(list_clients_handler),
@@ -32,6 +33,7 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
       "/api/task",
       post(create_task_handler).get(list_tasks_handler),
     )
+    //.route_layer(middleware::from_fn(mw_require_auth))
     .route("/api/task/:skill", get(get_task_handler))
     .route(
       "/api/proposal",
@@ -63,7 +65,6 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
 }
 
 async fn main_response_mapper(res: Response) -> Response {
-  println!("--> {:<12} - main_response_mapper", "INFO");
-  println!();
+  println!("--> {:<12} - main_response_mapper middleware", "INFO");
   res
 }

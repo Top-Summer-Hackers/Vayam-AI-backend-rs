@@ -6,6 +6,7 @@ use axum::{
   response::IntoResponse,
   Json,
 };
+use tower_cookies::Cookies;
 
 use crate::{
   error::MyError,
@@ -17,10 +18,16 @@ use crate::{
 };
 
 pub async fn api_login_handler(
+  cookies: Cookies,
   State(app_state): State<Arc<AppState>>,
   Json(body): Json<LoginUserSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-  match app_state.db.api_login(&body).await.map_err(MyError::from) {
+  match app_state
+    .db
+    .api_login(cookies, &body)
+    .await
+    .map_err(MyError::from)
+  {
     Ok(res) => Ok((StatusCode::CREATED, Json(res))),
     Err(e) => Err(e.into()),
   }

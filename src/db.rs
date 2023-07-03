@@ -113,7 +113,7 @@ impl DB {
 
   pub async fn api_login(
     &self,
-    //cookies: Cookies,
+    cookies: Cookies,
     body: &LoginUserSchema,
   ) -> Result<SingleUserResponse> {
     let role = body.role.to_owned();
@@ -131,7 +131,7 @@ impl DB {
           let user = doc_to_user_response(&user)?;
           if user.password == body.password {
             // FIXME: Implement real auth-token generation/signature.
-            //cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
+            cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
             return Ok(SingleUserResponse {
               status: "Success",
               data: UserData { user },
@@ -154,6 +154,7 @@ impl DB {
         Some(user) => {
           let user = doc_to_user_response(&user)?;
           if user.password == body.password {
+            cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
             return Ok(SingleUserResponse {
               status: "Success",
               data: UserData { user },
