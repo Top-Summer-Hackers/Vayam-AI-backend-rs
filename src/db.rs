@@ -69,7 +69,7 @@ impl DB {
       .expect("MONGODB_MILESTONES_COLLECTION must be set.");
 
     let mut client_options = ClientOptions::parse(mongodb_uri).await?;
-    client_options.app_name = Some(database_name.to_string());
+    client_options.app_name = Some(database_name.clone());
 
     let client_side = Client::with_options(client_options)?;
     let database = client_side.database(database_name.as_str());
@@ -190,8 +190,8 @@ impl DB {
 
   pub async fn add_client(&self, body: &CreateUserSchema) -> Result<SingleUserResponse> {
     let description = body.description.to_owned().unwrap_or_default();
-    let role = "client";
-    let document = build_user_document(body, description, role.to_owned())?;
+    let role = "client".to_string();
+    let document = build_user_document(body, description, role)?;
 
     let options = IndexOptions::builder().unique(true).build();
     let index = IndexModel::builder()

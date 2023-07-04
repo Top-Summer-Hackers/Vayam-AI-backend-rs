@@ -14,8 +14,8 @@ pub struct LoginUserSchema {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateUserSchema {
-  #[serde(rename = "_id")]
-  pub _id: String, //Todo: serde no convert "id" into "_id"
+  //#[serde(rename = "_id")]
+  pub _id: String, //Todo: use "id" instead of "_id"
   pub user_name: String,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
