@@ -120,7 +120,10 @@ impl DB {
     if role == "client" {
       let user_model = match self
         .client_collection_model
-        .find_one(doc! {"user_name": body.user_name.to_owned()}, None)
+        .find_one(
+          doc! {"user_name": body.credential.user_name.to_owned()},
+          None,
+        )
         .await
       {
         Ok(user) => user,
@@ -129,7 +132,7 @@ impl DB {
       match user_model {
         Some(user) => {
           let user = doc_to_user_response(&user)?;
-          if user.password == body.password {
+          if user.password == body.credential.password {
             // FIXME: Implement real auth-token generation/signature.
             cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
             return Ok(SingleUserResponse {
@@ -139,12 +142,15 @@ impl DB {
           }
           Err(InvalidPasswordError)
         }
-        None => Err(NotFoundError(body.user_name.to_owned())),
+        None => Err(NotFoundError(body.credential.user_name.to_owned())),
       }
     } else if role == "freelancer" {
       let user = match self
         .freelancer_collection_model
-        .find_one(doc! {"user_name": body.user_name.to_owned()}, None)
+        .find_one(
+          doc! {"user_name": body.credential.user_name.to_owned()},
+          None,
+        )
         .await
       {
         Ok(user) => user,
@@ -153,7 +159,7 @@ impl DB {
       match user {
         Some(user) => {
           let user = doc_to_user_response(&user)?;
-          if user.password == body.password {
+          if user.password == body.credential.password {
             cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
             return Ok(SingleUserResponse {
               status: "Success",
@@ -162,7 +168,7 @@ impl DB {
           }
           return Err(InvalidPasswordError);
         }
-        None => return Err(NotFoundError(body.user_name.to_owned())),
+        None => return Err(NotFoundError(body.credential.user_name.to_owned())),
       };
     } else {
       return Err(InvalidRoleError);

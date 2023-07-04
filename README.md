@@ -20,7 +20,7 @@ Fetch all the client(provider or employee):
 
 Submit a new client(provider or employee):
 
-`curl -X POST http://localhost:8080/api/client -d '{"_id": "0x546847854","user_name":"Scroll","description":"zk","password":"123"}' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/client -d '{"id": "0x546847854","user_name":"Scroll","description":"zk","password":"123"}' -H "content-type: application/json"`
 
 Verify user(clients) credentials(login)
 
@@ -39,7 +39,7 @@ Fetch all the freelancers:
 
 Submit a new freelancer:
 
-`curl -X POST http://localhost:8080/api/freelancer -d '{"_id": "0x001546847854","user_name":"Medhi",	"description":"Auditor","password":"123"}' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/freelancer -d '{"id": "0x001546847854","user_name":"Medhi",	"description":"Auditor","password":"123"}' -H "content-type: application/json"`
 
 Verify user(freelancer) credentials(login)
 

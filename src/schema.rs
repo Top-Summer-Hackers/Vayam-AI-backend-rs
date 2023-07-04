@@ -5,21 +5,26 @@ pub struct ParamOptions {
   pub id: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct LoginUserSchema {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CredentialUserSchema {
   pub user_name: String,
   pub password: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LoginUserSchema {
   pub role: String,
+  #[serde(flatten)]
+  pub credential: CredentialUserSchema,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CreateUserSchema {
-  //#[serde(rename = "_id")]
-  pub _id: String, //Todo: use "id" instead of "_id"
-  pub user_name: String,
+  #[serde(rename(serialize = "_id"))]
+  pub id: String,
+  #[serde(flatten)]
+  pub credential: CredentialUserSchema,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
-  pub password: String,
   // #[serde(skip_serializing_if = "Option::is_none")]
   // pub tasks_id: Option<Vec<String>>,
 }
