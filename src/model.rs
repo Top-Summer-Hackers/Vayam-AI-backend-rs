@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 pub struct UserModel {
   #[serde(rename = "_id")]
   pub id: String,
-  pub role: String, // Provider/Client or Freelancer
   pub user_name: String,
   pub description: Option<String>,
   pub password: String,

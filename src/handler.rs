@@ -11,8 +11,8 @@ use tower_cookies::Cookies;
 use crate::{
   error::MyError,
   schema::{
-    CreateMilestoneSchema, CreateProposalSchema, CreateReviewSchema, CreateTaskSchema,
-    CreateUserSchema, LoginUserSchema,
+    CreateClientSchema, CreateFreelancerSchema, CreateMilestoneSchema, CreateProposalSchema,
+    CreateReviewSchema, CreateTaskSchema, CreateUserSchema, LoginUserSchema,
   },
   AppState,
 };
@@ -44,7 +44,7 @@ pub async fn list_clients_handler(
 
 pub async fn add_client_handler(
   State(app_state): State<Arc<AppState>>,
-  Json(body): Json<CreateUserSchema>,
+  Json(body): Json<CreateClientSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
   match app_state.db.add_client(&body).await.map_err(MyError::from) {
     Ok(res) => Ok((StatusCode::CREATED, Json(res))),
@@ -111,7 +111,7 @@ pub async fn list_freelancers_handler(
 
 pub async fn add_freelancer_handler(
   State(app_state): State<Arc<AppState>>,
-  Json(body): Json<CreateUserSchema>,
+  Json(body): Json<CreateFreelancerSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
   match app_state
     .db

@@ -39,7 +39,7 @@ Fetch all the freelancers:
 
 Submit a new freelancer:
 
-`curl -X POST http://localhost:8080/api/freelancer -d '{"id": "0x001546847854","user_name":"Medhi",	"description":"Auditor","password":"123"}' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/freelancer -d '{"id": "0x001546847854","user_name":"Medhi",	"description":"Auditor","password":"123", "skills": []}' -H "content-type: application/json"`
 
 Verify user(freelancer) credentials(login)
 

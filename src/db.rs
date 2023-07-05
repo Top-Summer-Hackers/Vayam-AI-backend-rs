@@ -9,12 +9,12 @@ use crate::response::{
   TaskResponse, UserData, UserResponse, UsersListResponse,
 };
 use crate::schema::{
-  CreateMilestoneSchema, CreateProposalSchema, CreateReviewSchema, CreateTaskSchema,
-  LoginUserSchema,
+  CreateClientSchema, CreateFreelancerSchema, CreateMilestoneSchema, CreateProposalSchema,
+  CreateReviewSchema, CreateTaskSchema, LoginUserSchema,
 };
 use crate::utils::{
-  build_deal_document, build_milestone_document, build_milestones_document,
-  build_proposal_document, build_review_document, build_task_document, build_user_document,
+  build_client_document, build_deal_document, build_freelancer_document, build_milestone_document,
+  build_milestones_document, build_proposal_document, build_review_document, build_task_document,
   doc_to_deal_response, doc_to_detailed_proposal_response, doc_to_milestone_response,
   doc_to_proposal_and_deal_response, doc_to_proposal_response, doc_to_review_response,
   doc_to_task_response, doc_to_user_response, docs_to_deal_response,
@@ -121,7 +121,7 @@ impl DB {
       let user_model = match self
         .client_collection_model
         .find_one(
-          doc! {"user_name": body.credential.user_name.to_owned()},
+          doc! {"user_name": body.credentials.user_name.to_owned()},
           None,
         )
         .await
@@ -131,8 +131,8 @@ impl DB {
       };
       match user_model {
         Some(user) => {
-          let user = doc_to_user_response(&user)?;
-          if user.password == body.credential.password {
+          let user = doc_to_user_response(&user, &role)?;
+          if user.password == body.credentials.password {
             // FIXME: Implement real auth-token generation/signature.
             cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
             return Ok(SingleUserResponse {
@@ -142,13 +142,13 @@ impl DB {
           }
           Err(InvalidPasswordError)
         }
-        None => Err(NotFoundError(body.credential.user_name.to_owned())),
+        None => Err(NotFoundError(body.credentials.user_name.to_owned())),
       }
     } else if role == "freelancer" {
       let user = match self
         .freelancer_collection_model
         .find_one(
-          doc! {"user_name": body.credential.user_name.to_owned()},
+          doc! {"user_name": body.credentials.user_name.to_owned()},
           None,
         )
         .await
@@ -158,8 +158,8 @@ impl DB {
       };
       match user {
         Some(user) => {
-          let user = doc_to_user_response(&user)?;
-          if user.password == body.credential.password {
+          let user = doc_to_user_response(&user, &role)?;
+          if user.password == body.credentials.password {
             cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
             return Ok(SingleUserResponse {
               status: "Success",
@@ -168,7 +168,7 @@ impl DB {
           }
           return Err(InvalidPasswordError);
         }
-        None => return Err(NotFoundError(body.credential.user_name.to_owned())),
+        None => return Err(NotFoundError(body.credentials.user_name.to_owned())),
       };
     } else {
       return Err(InvalidRoleError);
@@ -183,8 +183,9 @@ impl DB {
       .map_err(MongoQueryError)?;
 
     let mut json_result: Vec<UserResponse> = Vec::new();
+    let role = "client".to_string();
     while let Some(doc) = cursor.next().await {
-      json_result.push(doc_to_user_response(&doc.unwrap())?);
+      json_result.push(doc_to_user_response(&doc.unwrap(), &role)?);
     }
 
     Ok(UsersListResponse {
@@ -194,10 +195,12 @@ impl DB {
     })
   }
 
-  pub async fn add_client(&self, body: &CreateUserSchema) -> Result<SingleUserResponse> {
-    let description = body.description.to_owned().unwrap_or_default();
-    let role = "client".to_string();
-    let document = build_user_document(body, description, role)?;
+  pub async fn add_client(&self, body: &CreateClientSchema) -> Result<SingleUserResponse> {
+    let user_body = &body.user;
+    let description = body.user.description.to_owned().unwrap_or_default();
+    let task_ids = body.task_ids.to_owned().unwrap_or_default();
+    //let role = "client".to_string();
+    let document = build_client_document(user_body, description, task_ids)?;
 
     let options = IndexOptions::builder().unique(true).build();
     let index = IndexModel::builder()
@@ -237,8 +240,8 @@ impl DB {
       Ok(None) => return Err(NotFoundError(new_id.to_string())),
       Err(e) => return Err(MongoQueryError(e)),
     };
-
-    let client = doc_to_user_response(&client_model)?;
+    let role = "client".to_string();
+    let client = doc_to_user_response(&client_model, &role)?;
 
     Ok(SingleUserResponse {
       status: "Success",
@@ -377,8 +380,9 @@ impl DB {
       .map_err(MongoQueryError)?;
 
     let mut json_result: Vec<UserResponse> = Vec::new();
+    let role = "freelancer".to_string();
     while let Some(doc) = cursor.next().await {
-      json_result.push(doc_to_user_response(&doc.unwrap())?);
+      json_result.push(doc_to_user_response(&doc.unwrap(), &role)?);
     }
 
     Ok(UsersListResponse {
@@ -388,10 +392,12 @@ impl DB {
     })
   }
 
-  pub async fn add_freelancer(&self, body: &CreateUserSchema) -> Result<SingleUserResponse> {
-    let description = body.description.to_owned().unwrap_or_default();
-    let role = "freelancer";
-    let document = build_user_document(body, description, role.to_owned())?;
+  pub async fn add_freelancer(&self, body: &CreateFreelancerSchema) -> Result<SingleUserResponse> {
+    let user_body = &body.user;
+    let description = body.user.description.to_owned().unwrap_or_default();
+    //let role = "freelancer";
+    let skills = body.skills.to_owned().unwrap_or_default();
+    let document = build_freelancer_document(user_body, description, skills)?;
 
     let options = IndexOptions::builder().unique(true).build();
     let index = IndexModel::builder()
@@ -435,8 +441,8 @@ impl DB {
       Ok(None) => return Err(NotFoundError(new_id.to_string())),
       Err(e) => return Err(MongoQueryError(e)),
     };
-
-    let user = doc_to_user_response(&user_model)?;
+    let role = "freelancer".to_string();
+    let user = doc_to_user_response(&user_model, &role)?;
 
     Ok(SingleUserResponse {
       status: "Success",

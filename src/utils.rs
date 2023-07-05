@@ -6,29 +6,49 @@ use crate::response::{
   ReviewResponse, TaskResponse,
 };
 use crate::schema::{
-  CreateMilestoneSchema, CreateProposalSchema, CreateReviewSchema, CreateTaskSchema,
+  CreateClientSchema, CreateMilestoneSchema, CreateProposalSchema, CreateReviewSchema,
+  CreateTaskSchema,
 };
 use crate::{model::UserModel, response::UserResponse, schema::CreateUserSchema};
 use mongodb::bson::{self, doc, Document};
 
-pub fn build_user_document(
-  body: &CreateUserSchema,
-  description: String,
-  role: String,
-) -> Result<bson::Document> {
+fn build_user_document(body: &CreateUserSchema, description: String) -> Result<bson::Document> {
   let serialized_data = bson::to_bson(body).map_err(MongoSerializeBsonError)?;
   let document = serialized_data.as_document().unwrap();
-  let mut doc_with_description = doc! {"role": role, "description": description};
+  let mut doc_with_description = doc! {"description": description};
   doc_with_description.extend(document.clone());
 
   Ok(doc_with_description)
 }
 
-pub fn doc_to_user_response(user: &UserModel) -> Result<UserResponse> {
+pub fn build_client_document(
+  body: &CreateUserSchema,
+  description: String,
+  taks_ids: Vec<String>,
+) -> Result<bson::Document> {
+  let document = build_user_document(body, description);
+  let mut doc_with_tasks = doc! {"tasks_id": taks_ids};
+  doc_with_tasks.extend(document.unwrap());
+
+  Ok(doc_with_tasks)
+}
+
+pub fn build_freelancer_document(
+  body: &CreateUserSchema,
+  description: String,
+  skills: Vec<String>,
+) -> Result<bson::Document> {
+  let document = build_user_document(body, description);
+  let mut doc_with_skills = doc! {"skills": skills};
+  doc_with_skills.extend(document.unwrap());
+
+  Ok(doc_with_skills)
+}
+pub fn doc_to_user_response(user: &UserModel, role: &String) -> Result<UserResponse> {
   let tasks_id = user.tasks_id.to_owned().unwrap_or_else(Vec::new);
 
   let user_response = UserResponse {
-    role: user.role.to_owned(),
+    role: role.to_owned(),
     id: user.id.to_owned(),
     user_name: user.user_name.to_owned(),
     description: user.description.to_owned().unwrap(),
