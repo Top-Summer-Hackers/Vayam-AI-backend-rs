@@ -1,9 +1,11 @@
 use crate::db::Result;
 use crate::error::MyError::MongoSerializeBsonError;
-use crate::model::{DealModel, MilestoneModel, ProposalModel, ReviewModel, TaskModel};
+use crate::model::{
+  ClientModel, DealModel, FreelancerModel, MilestoneModel, ProposalModel, ReviewModel, TaskModel,
+};
 use crate::response::{
-  DealResponse, MilestoneResponse, PartialDealResponse, ProposalDetailedResponse, ProposalResponse,
-  ReviewResponse, TaskResponse,
+  ClientResponse, DealResponse, FreelancerResponse, MilestoneResponse, PartialDealResponse,
+  ProposalDetailedResponse, ProposalResponse, ReviewResponse, TaskResponse,
 };
 use crate::schema::{
   CreateClientSchema, CreateMilestoneSchema, CreateProposalSchema, CreateReviewSchema,
@@ -45,18 +47,36 @@ pub fn build_freelancer_document(
   Ok(doc_with_skills)
 }
 pub fn doc_to_user_response(user: &UserModel, role: &String) -> Result<UserResponse> {
-  let tasks_id = user.tasks_id.to_owned().unwrap_or_else(Vec::new);
-
   let user_response = UserResponse {
     role: role.to_owned(),
     id: user.id.to_owned(),
     user_name: user.user_name.to_owned(),
     description: user.description.to_owned().unwrap(),
     password: user.password.to_owned(),
-    tasks_id,
   };
 
   Ok(user_response)
+}
+pub fn doc_to_client_response(client: &ClientModel) -> Result<ClientResponse> {
+  let tasks_ids = client.tasks_ids.to_owned().unwrap_or_default();
+  let role = String::from("client");
+  let user_response = doc_to_user_response(&client.user, &role).unwrap();
+  let client_response = ClientResponse {
+    user: user_response,
+    tasks_ids,
+  };
+  Ok(client_response)
+}
+
+pub fn doc_to_freelancer_response(freelancer: &FreelancerModel) -> Result<FreelancerResponse> {
+  let user_response = doc_to_user_response(&freelancer.user, &String::from("freelancer")).unwrap();
+  let skills = freelancer.skills.to_owned().unwrap_or_default();
+  let freelancer_response = FreelancerResponse {
+    user: user_response,
+    skills,
+  };
+
+  Ok(freelancer_response)
 }
 
 pub fn build_task_document(body: &CreateTaskSchema, _id: String) -> Result<bson::Document> {

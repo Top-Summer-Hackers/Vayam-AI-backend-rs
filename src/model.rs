@@ -7,9 +7,21 @@ pub struct UserModel {
   pub user_name: String,
   pub description: Option<String>,
   pub password: String,
-  pub tasks_id: Option<Vec<String>>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ClientModel {
+  #[serde(flatten)]
+  pub user: UserModel,
+  pub tasks_ids: Option<Vec<String>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FreelancerModel {
+  #[serde(flatten)]
+  pub user: UserModel,
+  pub skills: Option<Vec<String>>,
+}
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TaskModel {
   #[serde(rename = "_id")]
