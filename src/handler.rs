@@ -28,7 +28,7 @@ pub async fn api_login_handler(
     .await
     .map_err(MyError::from)
   {
-    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
+    Ok(res) => Ok((StatusCode::OK, Json(res))),
     Err(e) => Err(e.into()),
   }
 }

@@ -1,16 +1,13 @@
 use crate::handler::{
   add_milestones_handler, get_proposal_handler, list_milestone_handler, submit_milestone_handler,
 };
-use crate::web::mw_auth::mw_require_auth;
-use crate::{
-  handler::{
-    add_client_handler, add_freelancer_handler, add_review_handler, api_login_handler,
-    aprove_proposal_handler, create_task_handler, get_task_handler, list_clients_handler,
-    list_deals_handler, list_freelancers_handler, list_proposal_handler, list_tasks_handler,
-    submit_proposal_handler, update_deal_handler,
-  },
-  AppState,
-};
+use crate::web::mw_auth::{mw_require_auth};
+use crate::{handler::{
+  add_client_handler, add_freelancer_handler, add_review_handler, api_login_handler,
+  aprove_proposal_handler, create_task_handler, get_task_handler, list_clients_handler,
+  list_deals_handler, list_freelancers_handler, list_proposal_handler, list_tasks_handler,
+  submit_proposal_handler, update_deal_handler
+}, AppState, web};
 use axum::response::Response;
 use axum::{
   middleware,
@@ -22,18 +19,10 @@ use tower_cookies::CookieManagerLayer;
 
 pub fn create_router(app_state: Arc<AppState>) -> Router {
   Router::new()
-    .route("/api/login", post(api_login_handler))
-    .layer(middleware::map_response(main_response_mapper))
-    .layer(CookieManagerLayer::new())
-    .route(
-      "/api/client", //provider, employee
-      post(add_client_handler).get(list_clients_handler),
-    )
     .route(
       "/api/task",
       post(create_task_handler).get(list_tasks_handler),
     )
-    //.route_layer(middleware::from_fn(mw_require_auth))
     .route("/api/task/:skill", get(get_task_handler))
     .route(
       "/api/proposal",
@@ -61,6 +50,14 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
       post(add_freelancer_handler).get(list_freelancers_handler),
     )
     .route("/api/review", post(add_review_handler))
+    .route(
+      "/api/client", //provider, employee
+      post(add_client_handler).get(list_clients_handler),
+    )
+    .layer(middleware::map_response(main_response_mapper))
+    .layer(middleware::from_fn(mw_require_auth))
+    .route("/api/login", post(api_login_handler))
+    .layer(CookieManagerLayer::new())
     .with_state(app_state)
 }
 

@@ -23,11 +23,15 @@ use crate::web;
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
 use futures::StreamExt;
+use jsonwebtoken::{encode, EncodingKey, Header};
 use mongodb::bson::{doc, Bson, Document};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Collection, IndexModel};
 
 use tower_cookies::{Cookie, Cookies};
+use crate::web::SECRET;
+use crate::web::token::Claims;
+
 #[derive(Clone, Debug)]
 pub struct DB {
   pub client_collection_model: Collection<UserModel>,
@@ -116,63 +120,50 @@ impl DB {
     cookies: Cookies,
     body: &LoginUserSchema,
   ) -> Result<SingleUserResponse> {
-    let role = body.role.to_owned();
-    if role == "client" {
-      let user_model = match self
-        .client_collection_model
-        .find_one(
-          doc! {"user_name": body.credential.user_name.to_owned()},
-          None,
-        )
-        .await
+    let role = body.role.as_str();
+
+    let user: Option<UserModel> = match role {
+      "client" => match self
+          .client_collection_model
+          .find_one(doc! {"user_name": body.credential.user_name.to_owned()}, None)
+          .await
       {
         Ok(user) => user,
         Err(e) => return Err(MongoQueryError(e)),
-      };
-      match user_model {
-        Some(user) => {
-          let user = doc_to_user_response(&user)?;
-          if user.password == body.credential.password {
-            // FIXME: Implement real auth-token generation/signature.
-            cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
-            return Ok(SingleUserResponse {
-              status: "Success",
-              data: UserData { user },
-            });
-          }
-          Err(InvalidPasswordError)
+      },
+      "freelancer" => match self
+          .freelancer_collection_model
+          .find_one(doc! {"user_name": body.credential.user_name.to_owned()}, None)
+          .await
+      {
+        Ok(user) => user,
+        Err(e) => return Err(MongoQueryError(e)),
+      },
+      _ => return Err(InvalidRoleError)
+    };
+
+    return match user {
+      Some(user) => {
+        let user = doc_to_user_response(&user)?;
+        if user.password == body.credential.password {
+          cookies.add(
+            Cookie::new(
+              web::AUTH_TOKEN,
+              encode(
+                &Header::default(),
+                &Claims::new(user.id.clone(), 24 * 3600),
+                &EncodingKey::from_secret(SECRET.as_ref()))
+                  .expect("Couldn't encode token"))
+          );
+          return Ok(SingleUserResponse {
+            status: "Success",
+            data: UserData { user },
+          });
         }
-        None => Err(NotFoundError(body.credential.user_name.to_owned())),
+        Err(InvalidPasswordError)
       }
-    } else if role == "freelancer" {
-      let user = match self
-        .freelancer_collection_model
-        .find_one(
-          doc! {"user_name": body.credential.user_name.to_owned()},
-          None,
-        )
-        .await
-      {
-        Ok(user) => user,
-        Err(e) => return Err(MongoQueryError(e)),
-      };
-      match user {
-        Some(user) => {
-          let user = doc_to_user_response(&user)?;
-          if user.password == body.credential.password {
-            cookies.add(Cookie::new(web::AUTH_TOKEN, "user-1.exp.sign"));
-            return Ok(SingleUserResponse {
-              status: "Success",
-              data: UserData { user },
-            });
-          }
-          return Err(InvalidPasswordError);
-        }
-        None => return Err(NotFoundError(body.credential.user_name.to_owned())),
-      };
-    } else {
-      return Err(InvalidRoleError);
-    }
+      None => Err(NotFoundError(body.credential.user_name.to_owned()))
+    };
   }
 
   pub async fn fetch_clients(&self) -> Result<UsersListResponse> {
