@@ -19,7 +19,6 @@ use crate::utils::{
   doc_to_proposal_and_deal_response, doc_to_proposal_response, doc_to_review_response,
   doc_to_task_response, doc_to_user_response, docs_to_deal_response,
 };
-use crate::web;
 use crate::{error::MyError::*, model::UserModel, schema::CreateUserSchema};
 
 use futures::StreamExt;
@@ -29,8 +28,7 @@ use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Collection, IndexModel};
 
 use tower_cookies::{Cookie, Cookies};
-use crate::web::SECRET;
-use crate::web::token::Claims;
+use crate::web::token::{generate_auth_cookie};
 
 #[derive(Clone, Debug)]
 pub struct DB {
@@ -146,15 +144,7 @@ impl DB {
       Some(user) => {
         let user = doc_to_user_response(&user)?;
         if user.password == body.credential.password {
-          cookies.add(
-            Cookie::new(
-              web::AUTH_TOKEN,
-              encode(
-                &Header::default(),
-                &Claims::new(user.id.clone(), 24 * 3600),
-                &EncodingKey::from_secret(SECRET.as_ref()))
-                  .expect("Couldn't encode token"))
-          );
+          cookies.add(generate_auth_cookie(user.id.clone(), None));
           return Ok(SingleUserResponse {
             status: "Success",
             data: UserData { user },
@@ -632,7 +622,7 @@ impl DB {
       Err(NotFoundError(proposal_id.to_string()))
     }
   }
-  pub async fn aprove_proposal(&self, proposal_id: &String) -> Result<SingleProposalDealResponse> {
+  pub async fn approve_proposal(&self, proposal_id: &String) -> Result<SingleProposalDealResponse> {
     let filter = doc! {"_id": proposal_id};
     let update = doc! {"$set": {"accepted": true}};
 
@@ -721,10 +711,10 @@ impl DB {
   pub async fn update_deal(
     &self,
     deal_id: &String,
-    transaccion_id: &String,
+    transaction_id: &String,
   ) -> Result<SingleDealResponse> {
     let filter = doc! {"_id": deal_id};
-    let update = doc! {"$set": {"address": transaccion_id}};
+    let update = doc! {"$set": {"address": transaction_id}};
 
     let options = FindOneAndUpdateOptions::builder()
       .return_document(ReturnDocument::After)

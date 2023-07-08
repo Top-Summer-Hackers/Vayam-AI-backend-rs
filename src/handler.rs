@@ -16,6 +16,21 @@ use crate::{
   },
   AppState,
 };
+use crate::response::SingleUserResponse;
+use crate::web::token::generate_auth_cookie;
+
+fn when_user_added(
+    result: Result<SingleUserResponse, MyError>,
+    cookies: Cookies
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+  match result {
+    Ok(res) => {
+      cookies.add(generate_auth_cookie(res.data.user.id.clone(), None));
+      Ok((StatusCode::CREATED, Json(res)))
+    }
+    Err(e) => Err(e.into()),
+  }
+}
 
 pub async fn api_login_handler(
   cookies: Cookies,
@@ -43,13 +58,11 @@ pub async fn list_clients_handler(
 }
 
 pub async fn add_client_handler(
+  cookies: Cookies,
   State(app_state): State<Arc<AppState>>,
   Json(body): Json<CreateUserSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-  match app_state.db.add_client(&body).await.map_err(MyError::from) {
-    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
-    Err(e) => Err(e.into()),
-  }
+  when_user_added(app_state.db.add_client(&body).await.map_err(MyError::from), cookies)
 }
 
 pub async fn list_tasks_handler(
@@ -110,18 +123,11 @@ pub async fn list_freelancers_handler(
 }
 
 pub async fn add_freelancer_handler(
+  cookies: Cookies,
   State(app_state): State<Arc<AppState>>,
   Json(body): Json<CreateUserSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-  match app_state
-    .db
-    .add_freelancer(&body)
-    .await
-    .map_err(MyError::from)
-  {
-    Ok(res) => Ok((StatusCode::CREATED, Json(res))),
-    Err(e) => Err(e.into()),
-  }
+   when_user_added(app_state.db.add_freelancer(&body).await.map_err(MyError::from), cookies)
 }
 
 pub async fn add_review_handler(
@@ -180,13 +186,13 @@ pub async fn add_milestones_handler(
     Err(e) => Err(e.into()),
   }
 }
-pub async fn aprove_proposal_handler(
+pub async fn approve_proposal_handler(
   Path(proposal_id): Path<String>,
   State(app_state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
   match app_state
     .db
-    .aprove_proposal(&proposal_id)
+    .approve_proposal(&proposal_id)
     .await
     .map_err(MyError::from)
   {

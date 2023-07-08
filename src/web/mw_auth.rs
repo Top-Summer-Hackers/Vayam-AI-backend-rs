@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::convert::Infallible;
 use axum::body::{Body, BoxBody, Bytes, HttpBody};
 use axum::{BoxError};
@@ -6,9 +7,12 @@ use axum::http::request::Parts;
 use axum::http::Request;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
+use jsonwebtoken::{decode, DecodingKey, Validation};
 use tower_cookies::{Cookie, Cookies};
-use crate::web::AUTH_TOKEN;
+use crate::web::{AUTH_TOKEN, SECRET};
 use crate::error::{MyError, MyError::AuthFailNoAuthTokenCookie};
+use crate::response;
+use crate::web::token::Claims;
 
 pub async fn mw_require_auth<B>(
   cookies: Cookies,
@@ -17,7 +21,20 @@ pub async fn mw_require_auth<B>(
 ) -> Response
 {
   //next.run(req).await
-  if let Some(_) = cookies.get(AUTH_TOKEN) {
+  if let Some(auth_cookie) = cookies.get(AUTH_TOKEN) {
+    let mut validation = Validation::default();
+    validation.set_audience(std::env::var("AUTH_AUDIENCE")
+        .unwrap_or(String::default())
+        .split(",").map(String::from).collect::<Vec<String>>().as_slice());
+
+    let token = decode::<Claims>(auth_cookie.value(),
+                     &DecodingKey::from_secret(SECRET.as_ref()),
+                     &validation);
+
+    if token.is_err() {
+      return Response::builder().status(401).body(BoxBody::default()).unwrap();
+    }
+
     next.run(req).await
   } else {
     Response::builder().status(401).body(BoxBody::default()).unwrap()
