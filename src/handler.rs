@@ -8,6 +8,8 @@ use axum::{
 };
 use tower_cookies::Cookies;
 
+use crate::response::SingleUserResponse;
+use crate::web::token::generate_auth_cookie;
 use crate::{
   error::MyError,
   schema::{
@@ -16,12 +18,10 @@ use crate::{
   },
   AppState,
 };
-use crate::response::SingleUserResponse;
-use crate::web::token::generate_auth_cookie;
 
 fn when_user_added(
-    result: Result<SingleUserResponse, MyError>,
-    cookies: Cookies
+  result: Result<SingleUserResponse, MyError>,
+  cookies: Cookies,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
   match result {
     Ok(res) => {
@@ -62,7 +62,10 @@ pub async fn add_client_handler(
   State(app_state): State<Arc<AppState>>,
   Json(body): Json<CreateClientSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-  when_user_added(app_state.db.add_client(&body).await.map_err(MyError::from), cookies)
+  when_user_added(
+    app_state.db.add_client(&body).await.map_err(MyError::from),
+    cookies,
+  )
 }
 
 pub async fn list_tasks_handler(
@@ -127,7 +130,14 @@ pub async fn add_freelancer_handler(
   State(app_state): State<Arc<AppState>>,
   Json(body): Json<CreateFreelancerSchema>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-   when_user_added(app_state.db.add_freelancer(&body).await.map_err(MyError::from), cookies)
+  when_user_added(
+    app_state
+      .db
+      .add_freelancer(&body)
+      .await
+      .map_err(MyError::from),
+    cookies,
+  )
 }
 
 pub async fn add_review_handler(

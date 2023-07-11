@@ -32,8 +32,8 @@ use mongodb::bson::{doc, Bson, Document};
 use mongodb::options::{FindOneAndUpdateOptions, IndexOptions, ReturnDocument};
 use mongodb::{options::ClientOptions, Client, Collection, IndexModel};
 
+use crate::web::token::generate_auth_cookie;
 use tower_cookies::{Cookie, Cookies};
-use crate::web::token::{generate_auth_cookie};
 
 #[derive(Clone, Debug)]
 pub struct DB {
@@ -125,30 +125,36 @@ impl DB {
   ) -> Result<SingleUserResponse> {
     let role = body.role.as_str();
 
-    let user: Option<ClientModel> = match role {
+    let user_model: Option<UserModel> = match role {
       "client" => match self
-          .client_collection_model
-          .find_one(doc! {"user_name": body.credentials.user_name.to_owned()}, None)
-          .await
+        .client_collection_model
+        .find_one(
+          doc! {"user_name": body.credentials.user_name.to_owned()},
+          None,
+        )
+        .await
       {
-        Ok(user) => user,
+        Ok(model) => Some(model.unwrap().user),
         Err(e) => return Err(MongoQueryError(e)),
       },
       "freelancer" => match self
-          .freelancer_collection_model
-          .find_one(doc! {"user_name": body.credentials.user_name.to_owned()}, None)
-          .await
+        .freelancer_collection_model
+        .find_one(
+          doc! {"user_name": body.credentials.user_name.to_owned()},
+          None,
+        )
+        .await
       {
-        Ok(user) => user,
+        Ok(user) => Some(user.unwrap().user),
         Err(e) => return Err(MongoQueryError(e)),
       },
-      _ => return Err(InvalidRoleError)
+      _ => return Err(InvalidRoleError),
     };
 
-    return match user {
+    return match user_model {
       Some(user) => {
-        let user = doc_to_user_response(&user.user, &"".to_string())?; // TODO role
-        if user.password == body.credential.password {
+        let user = doc_to_user_response(&user, &role.to_owned())?; // TODO role
+        if user.password == body.credentials.password {
           cookies.add(generate_auth_cookie(user.id.clone(), None));
           return Ok(SingleUserResponse {
             status: "Success",
@@ -157,7 +163,7 @@ impl DB {
         }
         Err(InvalidPasswordError)
       }
-      None => Err(NotFoundError(body.credential.user_name.to_owned()))
+      None => Err(NotFoundError(body.credentials.user_name.to_owned())),
     };
   }
 
@@ -180,7 +186,7 @@ impl DB {
     })
   }
 
-  pub async fn add_client(&self, body: &CreateClientSchema) -> Result<SingleClientResponse> {
+  pub async fn add_client(&self, body: &CreateClientSchema) -> Result<SingleUserResponse> {
     let user_body = &body.user;
     let description = body.user.description.to_owned().unwrap_or_default();
     let task_ids = body.task_ids.to_owned().unwrap_or_default();
@@ -228,9 +234,9 @@ impl DB {
     //let role = "client".to_string();
     let client = doc_to_client_response(&client_model)?;
 
-    Ok(SingleClientResponse {
+    Ok(SingleUserResponse {
       status: "Success",
-      data: ClientData { client },
+      data: UserData { user: client.user },
     })
   }
 
@@ -376,10 +382,7 @@ impl DB {
     })
   }
 
-  pub async fn add_freelancer(
-    &self,
-    body: &CreateFreelancerSchema,
-  ) -> Result<SingleFreelancerResponse> {
+  pub async fn add_freelancer(&self, body: &CreateFreelancerSchema) -> Result<SingleUserResponse> {
     let user_body = &body.user;
     let description = body.user.description.to_owned().unwrap_or_default();
     //let role = "freelancer";
@@ -430,9 +433,11 @@ impl DB {
     };
     let freelancer = doc_to_freelancer_response(&user_model)?;
 
-    Ok(SingleFreelancerResponse {
+    Ok(SingleUserResponse {
       status: "Success",
-      data: FreelancerData { freelancer },
+      data: UserData {
+        user: freelancer.user,
+      },
     })
   }
 
