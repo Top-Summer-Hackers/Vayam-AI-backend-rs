@@ -14,7 +14,7 @@ pub struct CredentialUserSchema {
 pub struct LoginUserSchema {
   pub role: String,
   #[serde(flatten)]
-  pub credential: CredentialUserSchema,
+  pub credentials: CredentialUserSchema,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -25,9 +25,22 @@ pub struct CreateUserSchema {
   pub credential: CredentialUserSchema,
   #[serde(skip_serializing_if = "Option::is_none")]
   pub description: Option<String>,
-  // #[serde(skip_serializing_if = "Option::is_none")]
-  // pub tasks_id: Option<Vec<String>>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CreateClientSchema {
+  #[serde(flatten)]
+  pub user: CreateUserSchema,
+  pub task_ids: Option<Vec<String>>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CreateFreelancerSchema {
+  #[serde(flatten)]
+  pub user: CreateUserSchema,
+  pub skills: Option<Vec<String>>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateTaskSchema {
   pub client_id: String,
