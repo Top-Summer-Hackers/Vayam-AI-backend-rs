@@ -125,10 +125,10 @@ impl DB {
   ) -> Result<SingleUserResponse> {
     let role = body.role.as_str();
 
-    let user: Option<UserModel> = match role {
+    let user: Option<ClientModel> = match role {
       "client" => match self
           .client_collection_model
-          .find_one(doc! {"user_name": body.credential.user_name.to_owned()}, None)
+          .find_one(doc! {"user_name": body.credentials.user_name.to_owned()}, None)
           .await
       {
         Ok(user) => user,
@@ -136,7 +136,7 @@ impl DB {
       },
       "freelancer" => match self
           .freelancer_collection_model
-          .find_one(doc! {"user_name": body.credential.user_name.to_owned()}, None)
+          .find_one(doc! {"user_name": body.credentials.user_name.to_owned()}, None)
           .await
       {
         Ok(user) => user,
@@ -147,7 +147,7 @@ impl DB {
 
     return match user {
       Some(user) => {
-        let user = doc_to_user_response(&user)?;
+        let user = doc_to_user_response(&user.user, &"".to_string())?; // TODO role
         if user.password == body.credential.password {
           cookies.add(generate_auth_cookie(user.id.clone(), None));
           return Ok(SingleUserResponse {
