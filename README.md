@@ -1,5 +1,9 @@
 # VAYAM-ai BACKEND
 
+## Linea-Infura
+
+Web3 API Key: https://linea-goerli.infura.io/v3/73089c0ff2004798808153ece9388b4b
+
 ## Setup and run
 
 Make sure you have Rust and Cargo installed with the `default` toolchain.  
@@ -18,7 +22,7 @@ Fetch all the client(provider or employee):
 
 `curl http://localhost:8080/api/client`
 
-Submit a new client(provider or employee):
+Submit(register) a new client(provider or employee):
 
 `curl -X POST http://localhost:8080/api/client -d '{"id": "0x546847854","user_name":"Scroll","description":"zk","password":"123"}' -H "content-type: application/json"`
 
@@ -37,7 +41,7 @@ Fetch all the freelancers:
 
 `curl http://localhost:8080/api/freelancer`
 
-Submit a new freelancer:
+Submit(Register) a new freelancer:
 
 `curl -X POST http://localhost:8080/api/freelancer -d '{"id": "0x001546847854","user_name":"Medhi",	"description":"Auditor","password":"123", "skills": []}' -H "content-type: application/json"`
 
@@ -60,9 +64,10 @@ Get task by skill:
 
 `curl http://localhost:8080/api/task/{:skill}`
 
-Submit a new task:
+Submit a new task(Only by client) :
 
-`curl -X POST http://localhost:8080/api/task -d '{"client_id": "0x418564867486","title":"Create bank-end","start_time":"22/01/2023","deadline":"29/10/2023","description":"Back end on rust", "skills":["Solidity","Rust"],"bounty":400 }' -H "content-type: application/json"`
+`curl -X POST http://localhost:8080/api/task -d '{
+	"client_id": "0x418564867486","title":"Create bank-end","start_time":"22/01/2023","deadline":"29/10/2023","description":"Back end on rust", "skills":["Solidity","Rust"],"bounty":400 }' -H "content-type: application/json"`
 
 Fetch all the proposals:
 
@@ -72,7 +77,7 @@ Get proposal by id:
 
 `curl http://localhost:8080/api/proposal/{proposal_id}`
 
-Submit a new proposal:
+Submit a new proposal(Only by freelancer):
 
 `curl --request POST \
   --url http://localhost:8080/api/proposal \
@@ -111,7 +116,7 @@ Add block of milestones:
 "price": 2280
 }]'`
 
-Approve a proposal:
+Approve a proposal(Only by client):
 
 `curl -X PATCH http://localhost:8080/api/proposal/{proposal_id}`
 
@@ -119,11 +124,11 @@ Fetch all the deals:
 
 `curl http://localhost:8080/api/deal`
 
-Submit milestone(link)
+Submit milestone(link) (Only by freelancer)
 
 `curl x PATCH http://localhost:8080/api/milestone/{proposal_id}/{milestone_id}/{link}`
 
-Update deal address:
+Update deal transaction address (Only by client):
 
 `curl -X PATCH http://localhost:8080/api/deal/{deal_id}/{transacction_id}`
 
