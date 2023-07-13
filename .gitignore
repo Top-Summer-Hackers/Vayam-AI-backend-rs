@@ -1,3 +1,4 @@
 /target
 .env
 pp.postman_collection.json
+.idea

@@ -1,23 +1,52 @@
-use crate::db::Result;
-use crate::error::MyError::AuthFailNoAuthTokenCookie;
-use crate::web::AUTH_TOKEN;
-use axum::extract::{FromRequestParts, State};
+use crate::error::{MyError, MyError::AuthFailNoAuthTokenCookie};
+use crate::response;
+use crate::web::token::Claims;
+use crate::web::{AUTH_TOKEN, SECRET};
+use axum::body::{Body, BoxBody, Bytes, HttpBody};
+use axum::extract::{Extension, FromRequestParts, State};
 use axum::http::request::Parts;
 use axum::http::Request;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-//use lazy_regex::regex_captures;
+use axum::BoxError;
+use jsonwebtoken::{decode, DecodingKey, Validation};
+use std::collections::HashSet;
+use std::convert::Infallible;
 use tower_cookies::{Cookie, Cookies};
 
-pub async fn mw_require_auth<B>(
-  cookies: Cookies,
-  req: Request<B>,
-  next: Next<B>,
-) -> Result<Response> {
-  let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
-  match auth_token {
-    Some(token) => Ok(next.run(req).await),
-    None => Err(AuthFailNoAuthTokenCookie),
+pub async fn mw_require_auth<B>(cookies: Cookies, req: Request<B>, next: Next<B>) -> Response {
+  //next.run(req).await
+  if let Some(auth_cookie) = cookies.get(AUTH_TOKEN) {
+    let mut validation = Validation::default();
+    validation.set_audience(
+      std::env::var("AUTH_AUDIENCE")
+        .unwrap_or(String::default())
+        .split(",")
+        .map(String::from)
+        .collect::<Vec<String>>()
+        .as_slice(),
+    );
+
+    let token = decode::<Claims>(
+      auth_cookie.value(),
+      &DecodingKey::from_secret(SECRET.as_ref()),
+      &validation,
+    );
+
+    if token.is_err() {
+      println!("{:?}", token.err().unwrap());
+      return Response::builder()
+        .status(401)
+        .body(BoxBody::default())
+        .unwrap();
+    }
+
+    next.run(req).await
+  } else {
+    Response::builder()
+      .status(401)
+      .body(BoxBody::default())
+      .unwrap()
   }
 }
 

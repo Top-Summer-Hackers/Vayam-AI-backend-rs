@@ -7,7 +7,20 @@ pub struct UserResponse {
   pub user_name: String,
   pub description: String,
   pub password: String,
-  pub tasks_id: Vec<String>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct FreelancerResponse {
+  #[serde(flatten)]
+  pub user: UserResponse,
+  pub skills: Vec<String>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct ClientResponse {
+  #[serde(flatten)]
+  pub user: UserResponse,
+  pub tasks_ids: Vec<String>,
 }
 
 #[derive(Serialize, Debug)]
@@ -84,6 +97,16 @@ pub struct UserData {
 }
 
 #[derive(Serialize, Debug)]
+pub struct ClientData {
+  pub client: ClientResponse,
+}
+
+#[derive(Serialize, Debug)]
+pub struct FreelancerData {
+  pub freelancer: FreelancerResponse,
+}
+
+#[derive(Serialize, Debug)]
 pub struct TaskData {
   pub task: TaskResponse,
 }
@@ -120,10 +143,36 @@ pub struct SingleUserResponse {
 }
 
 #[derive(Serialize, Debug)]
+pub struct SingleClientResponse {
+  pub status: &'static str,
+  pub data: ClientData,
+}
+
+#[derive(Serialize, Debug)]
+pub struct SingleFreelancerResponse {
+  pub status: &'static str,
+  pub data: FreelancerData,
+}
+
+#[derive(Serialize, Debug)]
 pub struct UsersListResponse {
   pub status: &'static str,
   pub results: usize,
   pub users: Vec<UserResponse>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct ClientListResponse {
+  pub status: &'static str,
+  pub results: usize,
+  pub users: Vec<ClientResponse>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct FreelancerListResponse {
+  pub status: &'static str,
+  pub results: usize,
+  pub users: Vec<FreelancerResponse>,
 }
 
 #[derive(Serialize, Debug)]
