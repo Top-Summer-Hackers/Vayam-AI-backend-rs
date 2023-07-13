@@ -68,7 +68,7 @@ impl Into<(axum::http::StatusCode, Json<serde_json::Value>)> for MyError {
         StatusCode::NOT_FOUND,
         ErrorResponse {
           status: "Fail",
-          message: format!("Facet with id: {} not found", id),
+          message: format!("User with id: {} not found", id),
         },
       ),
       MyError::MongoError(e) => (

@@ -1,43 +1,52 @@
-use std::collections::HashSet;
-use std::convert::Infallible;
+use crate::error::{MyError, MyError::AuthFailNoAuthTokenCookie};
+use crate::response;
+use crate::web::token::Claims;
+use crate::web::{AUTH_TOKEN, SECRET};
 use axum::body::{Body, BoxBody, Bytes, HttpBody};
-use axum::{BoxError};
-use axum::extract::{FromRequestParts, State, Extension};
+use axum::extract::{Extension, FromRequestParts, State};
 use axum::http::request::Parts;
 use axum::http::Request;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
+use axum::BoxError;
 use jsonwebtoken::{decode, DecodingKey, Validation};
+use std::collections::HashSet;
+use std::convert::Infallible;
 use tower_cookies::{Cookie, Cookies};
-use crate::web::{AUTH_TOKEN, SECRET};
-use crate::error::{MyError, MyError::AuthFailNoAuthTokenCookie};
-use crate::response;
-use crate::web::token::Claims;
 
-pub async fn mw_require_auth<B>(
-  cookies: Cookies,
-  req: Request<B>,
-  next: Next<B>,
-) -> Response
-{
+pub async fn mw_require_auth<B>(cookies: Cookies, req: Request<B>, next: Next<B>) -> Response {
   //next.run(req).await
   if let Some(auth_cookie) = cookies.get(AUTH_TOKEN) {
     let mut validation = Validation::default();
-    validation.set_audience(std::env::var("AUTH_AUDIENCE")
+    validation.set_audience(
+      std::env::var("AUTH_AUDIENCE")
         .unwrap_or(String::default())
-        .split(",").map(String::from).collect::<Vec<String>>().as_slice());
+        .split(",")
+        .map(String::from)
+        .collect::<Vec<String>>()
+        .as_slice(),
+    );
 
-    let token = decode::<Claims>(auth_cookie.value(),
-                     &DecodingKey::from_secret(SECRET.as_ref()),
-                     &validation);
+    let token = decode::<Claims>(
+      auth_cookie.value(),
+      &DecodingKey::from_secret(SECRET.as_ref()),
+      &validation,
+    );
 
     if token.is_err() {
-      return Response::builder().status(401).body(BoxBody::default()).unwrap();
+      println!("{:?}", token.err().unwrap());
+      return Response::builder()
+        .status(401)
+        .body(BoxBody::default())
+        .unwrap();
     }
 
     next.run(req).await
   } else {
-    Response::builder().status(401).body(BoxBody::default()).unwrap()
+    Response::builder()
+      .status(401)
+      .body(BoxBody::default())
+      .unwrap()
   }
 }
 
